@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hotheads Salon — Hair Salon in Pasadena, CA</title>
+  <meta name="description" content="Hotheads Salon in Pasadena: cuts, color, highlights, ombré, color correction, blow-drys, Brazilian Blowouts and threading. Appointments only — call (626) 221-5943.">
+  <meta name="theme-color" content="#07040b">
+  <link rel="canonical" href="https://www.hotheadspasadena.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hotheads Salon — Pasadena, CA">
+  <meta property="og:description" content="This isn't your typical salon. Cuts, color and styling at 2513 E. Colorado Blvd, Pasadena.">
+  <meta property="og:image" content="assets/img/og-image.jpg">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+  <link rel="preload" href="assets/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./assets/vendor/three.module.min.js",
+        "three/addons/": "./assets/vendor/three-addons/",
+        "lenis": "./assets/vendor/lenis.min.mjs"
+      }
+    }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HairSalon",
+      "name": "Hotheads Salon",
+      "url": "https://www.hotheadspasadena.com/",
+      "telephone": "+1-626-221-5943",
+      "email": "jazminezakarian@gmail.com",
+      "image": "https://www.hotheadspasadena.com/assets/img/og-image.jpg",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "2513 E. Colorado Blvd",
+        "addressLocality": "Pasadena",
+        "addressRegion": "CA",
+        "postalCode": "91107",
+        "addressCountry": "US"
+      },
+      "priceRange": "$$"
+    }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- The 3D film. Decorative: every word on the page is real HTML. -->
+  <canvas id="gl" aria-hidden="true"></canvas>
+
+  <div class="loader" aria-hidden="true">
+    <img class="loader__logo" src="assets/img/hotheads-logo-white.png" alt="" width="1158" height="298">
+    <div class="loader__bar"><span></span></div>
+    <p class="loader__hint">Warming up the chair</p>
+  </div>
+
+  <header class="nav">
+    <a class="nav__brand" href="#top" aria-label="Hotheads Salon — back to top">
+      <img src="assets/img/hotheads-logo-white.png" alt="Hotheads" width="1158" height="298">
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#cut" data-link="1">Cut</a>
+      <a href="#color" data-link="2">Color</a>
+      <a href="#style" data-link="3">Style</a>
+      <a href="#salon" data-link="4">Salon</a>
+      <a href="#stylists" data-link="5">Stylists</a>
+      <a href="#menu" data-link="6">Menu</a>
+      <a href="#visit" data-link="8">Visit</a>
+    </nav>
+    <a class="btn btn--small btn--hot nav__cta" href="tel:+16262215943">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>
+      <span>Call to book</span>
+    </a>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
+      <span class="sr-only">Menu</span><i></i><i></i>
+    </button>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <a href="#cut">Cut</a>
+    <a href="#color">Color</a>
+    <a href="#style">Style</a>
+    <a href="#salon">Salon</a>
+    <a href="#stylists">Stylists</a>
+    <a href="#menu">Menu</a>
+    <a href="#visit">Visit</a>
+    <a class="btn btn--hot" href="tel:+16262215943">Call (626) 221-5943</a>
+  </div>
+
+  <ol class="rail" aria-hidden="true">
+    <li data-rail="1"><span>01</span> Cut</li>
+    <li data-rail="2"><span>02</span> Color</li>
+    <li data-rail="3"><span>03</span> Style</li>
+    <li data-rail="4"><span>04</span> Salon</li>
+    <li class="rail__track"><i></i></li>
+  </ol>
+
+  <main id="main">
+
+    <!-- 00 · HERO -->
+    <section class="hero" id="top" data-scene="hero">
+      <div class="hero__inner">
+        <a class="pill" href="tel:+16269934836">
+          <b>New</b> Brazilian Blowouts &amp; blow-drys on Sundays — call Taleen
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </a>
+        <p class="eyebrow hero__eyebrow">Hair salon · Pasadena, California</p>
+        <h1 class="hero__title">
+          <span class="line"><span>This isn't your</span></span>
+          <span class="line"><span><em class="hot">typical</em> salon.</span></span>
+        </h1>
+        <p class="hero__lede">At Hotheads, we treat everyone like family. Our laid-back attitude is paired with years of styling experience — a combination that will leave you looking and feeling fantastic.</p>
+        <div class="hero__actions">
+          <a class="btn btn--hot" href="tel:+16262215943">Call to book <small>(626) 221-5943</small></a>
+          <a class="btn btn--ghost" href="#stylists">Meet the stylists</a>
+        </div>
+      </div>
+      <div class="hero__foot">
+        <span class="scroll-cue"><i></i>Scroll to play</span>
+        <span class="hero__meta">Appointments only · 2513 E. Colorado Blvd</span>
+      </div>
+    </section>
+
+    <!-- 01 · CUT -->
+    <section class="chapter chapter--left" id="cut" data-scene="cut">
+      <div class="stage">
+        <span class="chapter__num" aria-hidden="true">01</span>
+        <div class="chapter__copy">
+          <p class="eyebrow" data-reveal="0.00 0.10 0.84 0.96">01 — The Cut</p>
+          <h2 class="chapter__title" data-reveal="0.02 0.14 0.84 0.97">Cut with <em class="hot">intention.</em></h2>
+          <p class="chapter__body" data-reveal="0.06 0.18 0.85 0.98">Classic cuts for women, men and kids. It starts with a conversation, then every section is shaped by a stylist with years behind the shears.</p>
+          <ul class="chips" data-reveal="0.10 0.22 0.86 0.99">
+            <li><span>Women</span><b>$85+</b></li>
+            <li><span>Men</span><b>$45+</b></li>
+            <li><span>Kids · 12 &amp; under</span><b>$40–65+</b></li>
+          </ul>
+        </div>
+        <p class="stage__caption" data-reveal="0.30 0.36 0.56 0.66" aria-hidden="true">snip.</p>
+      </div>
+    </section>
+
+    <!-- 02 · COLOR -->
+    <section class="chapter chapter--right" id="color" data-scene="color">
+      <div class="stage">
+        <span class="chapter__num" aria-hidden="true">02</span>
+        <div class="chapter__copy">
+          <p class="eyebrow" data-reveal="0.00 0.10 0.84 0.96">02 — The Color</p>
+          <h2 class="chapter__title" data-reveal="0.02 0.14 0.84 0.97">Color that <em class="hot">turns heads.</em></h2>
+          <p class="chapter__body" data-reveal="0.06 0.18 0.85 0.98">Full and partial highlights, ombré and root touch-ups — plus color correction when a past appointment went sideways.</p>
+          <ul class="chips" data-reveal="0.10 0.22 0.86 0.99">
+            <li><span>Highlights · full / ombré</span><b>$300+</b></li>
+            <li><span>Highlights · partial / ombré</span><b>$150+</b></li>
+            <li><span>Root color · touch-up</span><b>$85+</b></li>
+            <li><span>Color correction</span><b>$450+</b></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 · STYLE -->
+    <section class="chapter chapter--left" id="style" data-scene="style">
+      <div class="stage">
+        <span class="chapter__num" aria-hidden="true">03</span>
+        <div class="chapter__copy">
+          <p class="eyebrow" data-reveal="0.00 0.10 0.84 0.96">03 — The Finish</p>
+          <h2 class="chapter__title" data-reveal="0.02 0.14 0.84 0.97">Blow-drys with <em class="hot">body.</em></h2>
+          <p class="chapter__body" data-reveal="0.06 0.18 0.85 0.98">Bounce, shine and movement that lasts. Now offering Brazilian Blowouts and blow-drys on Sundays — contact Taleen directly.</p>
+          <ul class="chips" data-reveal="0.10 0.22 0.86 0.99">
+            <li><span>Blow-dry</span><b>$45+</b></li>
+            <li><a href="tel:+16269934836"><span>Brazilian Blowout · Sundays</span><b>Call Taleen</b></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 · SALON -->
+    <section class="chapter chapter--center chapter--salon" id="salon" data-scene="salon">
+      <div class="stage">
+        <div class="chapter__copy">
+          <p class="eyebrow" data-reveal="0.00 0.10 0.80 0.94">04 — The Salon</p>
+          <h2 class="chapter__title" data-reveal="0.02 0.14 0.80 0.95">Inside <em class="hot">2513 E. Colorado.</em></h2>
+          <p class="chapter__body" data-reveal="0.06 0.18 0.82 0.96">Green velvet, pop art, a purple-haired muse on the wall and a row of chairs that rarely sit empty.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Cuts <i>✦</i> Color <i>✦</i> Highlights <i>✦</i> Ombré <i>✦</i> Root touch-ups <i>✦</i> Color correction <i>✦</i> Blow-drys <i>✦</i> Brazilian Blowouts <i>✦</i> Threading <i>✦</i>&nbsp;</span>
+        <span>Cuts <i>✦</i> Color <i>✦</i> Highlights <i>✦</i> Ombré <i>✦</i> Root touch-ups <i>✦</i> Color correction <i>✦</i> Blow-drys <i>✦</i> Brazilian Blowouts <i>✦</i> Threading <i>✦</i>&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- 05 · STYLISTS -->
+    <section class="block stylists" id="stylists" data-scene="stylists">
+      <header class="block__head" data-inview>
+        <p class="eyebrow">The team</p>
+        <h2 class="block__title">Meet the <em class="hot">hot heads.</em></h2>
+        <p class="block__lede">Every stylist keeps their own book — call or text them directly to grab a chair.</p>
+      </header>
+      <ul class="team">
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/carla.webp" alt="Carla, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Carla</h3>
+            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <div class="card__actions"><a href="tel:+16266161406">Call</a><a href="sms:+16266161406">Text</a><span>(626) 616-1406</span></div>
+          </div>
+        </li>
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/stephanie.webp" alt="Stephanie, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Stephanie</h3>
+            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <div class="card__actions"><a href="tel:+18184287699">Call</a><a href="sms:+18184287699">Text</a><span>(818) 428-7699</span></div>
+          </div>
+        </li>
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/erika.webp" alt="Erika, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Erika</h3>
+            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <div class="card__actions"><a href="tel:+13108766335">Call</a><a href="sms:+13108766335">Text</a><span>(310) 876-6335</span></div>
+          </div>
+        </li>
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/maral.webp" alt="Maral, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Maral</h3>
+            <p>Cut &amp; color · Eyebrow &amp; upper-lip threading</p>
+            <div class="card__actions"><a href="tel:+16262218492">Call</a><a href="sms:+16262218492">Text</a><span>(626) 221-8492</span></div>
+          </div>
+        </li>
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/jazmine.webp" alt="Jazmine, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Jazmine</h3>
+            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <div class="card__actions"><a href="tel:+16262215943">Call</a><a href="sms:+16262215943">Text</a><span>(626) 221-5943</span></div>
+          </div>
+        </li>
+        <li class="card" data-inview>
+          <figure class="card__photo"><img src="assets/img/stylists/taleen.webp" alt="Taleen, stylist at Hotheads" width="720" height="900" loading="lazy" decoding="async"></figure>
+          <div class="card__body">
+            <h3>Taleen</h3>
+            <p>Brazilian Blowouts &amp; blow-drys · Sundays</p>
+            <div class="card__actions"><a href="tel:+16269934836">Call</a><a href="sms:+16269934836">Text</a><span>(626) 993-4836</span></div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 06 · MENU -->
+    <section class="block menu" id="menu" data-scene="menu">
+      <header class="block__head" data-inview>
+        <p class="eyebrow">Pricing</p>
+        <h2 class="block__title">The <em class="hot">menu.</em></h2>
+        <p class="block__lede">All prices are starting prices. Call your stylist for a quote.</p>
+      </header>
+      <div class="menu__grid">
+        <div class="menu__col" data-inview>
+          <h3>Haircuts</h3>
+          <dl>
+            <div><dt>Women</dt><dd>$85 &amp; up</dd></div>
+            <div><dt>Men</dt><dd>$45 &amp; up</dd></div>
+            <div><dt>Kids <small>12 &amp; under</small></dt><dd>$40–$65 &amp; up</dd></div>
+          </dl>
+        </div>
+        <div class="menu__col" data-inview>
+          <h3>Color</h3>
+          <dl>
+            <div><dt>Highlights <small>Full / ombré</small></dt><dd>$300 &amp; up</dd></div>
+            <div><dt>Highlights <small>Partial / ombré</small></dt><dd>$150 &amp; up</dd></div>
+            <div><dt>Root color <small>Touch-up</small></dt><dd>$85 &amp; up</dd></div>
+            <div><dt>Color correction</dt><dd>$450 &amp; up</dd></div>
+          </dl>
+        </div>
+        <div class="menu__col" data-inview>
+          <h3>Styling &amp; more</h3>
+          <dl>
+            <div><dt>Blow-dry</dt><dd>$45 &amp; up</dd></div>
+            <div><dt>Brazilian Blowout <small>Sundays · Taleen</small></dt><dd><a href="tel:+16269934836">Call</a></dd></div>
+            <div><dt>Eyebrow threading</dt><dd>$25</dd></div>
+            <div><dt>Upper-lip threading</dt><dd>$10</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 · BOOK -->
+    <section class="chapter chapter--center chapter--book" id="book" data-scene="book">
+      <div class="stage">
+        <div class="chapter__copy">
+          <p class="eyebrow" data-reveal="0.18 0.30 2 3">Appointments only</p>
+          <h2 class="chapter__title book__title" data-reveal="0.22 0.36 2 3">Your chair <br>is <em class="hot">waiting.</em></h2>
+          <p class="chapter__body" data-reveal="0.28 0.42 2 3">We get booked quickly, so please call ahead to book your hair appointment.</p>
+          <div class="hero__actions book__actions" data-reveal="0.32 0.46 2 3">
+            <a class="btn btn--hot" href="tel:+16262215943">Call (626) 221-5943</a>
+            <a class="btn btn--ghost" href="mailto:jazminezakarian@gmail.com?subject=Appointment%20request">Email us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 · VISIT -->
+    <footer class="visit" id="visit" data-scene="visit">
+      <div class="visit__grid">
+        <div class="visit__col visit__col--wide" data-inview>
+          <p class="eyebrow">Visit</p>
+          <address>
+            <a class="visit__address" href="https://goo.gl/maps/c6onPwUA9fNLj4FJ9" target="_blank" rel="noopener">2513 E. Colorado Blvd<br>Pasadena, CA 91107 <span aria-hidden="true">↗</span></a>
+          </address>
+        </div>
+        <div class="visit__col" data-inview>
+          <p class="eyebrow">Hours</p>
+          <p>Sunday – Saturday<br>Call for appointments</p>
+        </div>
+        <div class="visit__col" data-inview>
+          <p class="eyebrow">Contact</p>
+          <p><a href="tel:+16262215943">(626) 221-5943</a><br><a href="mailto:jazminezakarian@gmail.com">jazminezakarian@gmail.com</a></p>
+        </div>
+      </div>
+      <img class="visit__logo" src="assets/img/hotheads-logo-white.png" alt="Hotheads" width="1158" height="298" loading="lazy">
+      <div class="visit__base">
+        <p>© <span data-year>2026</span> Hotheads Salon. All rights reserved.</p>
+        <p>Designed by <a href="https://www.tenelevenmedia.com/" target="_blank" rel="noopener">TenElevenMedia</a></p>
+      </div>
+    </footer>
+  </main>
+
+  <noscript><style>.loader{display:none}</style></noscript>
+</body>
+</html>
