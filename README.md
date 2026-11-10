@@ -1,4 +1,4 @@
-# Hotheads Salon — 3D scroll-film concept
+# Hotheads Salon: 3D scroll-film concept
 
 A concept redesign of [hotheadspasadena.com](https://www.hotheadspasadena.com/) built around a
 real-time 3D "film" that plays as you scroll. The live Webflow site is untouched; this is a
@@ -22,7 +22,7 @@ does something to it:
 | 1 | **01 · The Cut** | Rose-gold shears fly in, open, and *snip*. The cut length drops away and leaves a blunt bob |
 | 2 | **02 · The Color** | Dye drops fall into the hair and a balayage paints from the tips up: violet roots, magenta mids, ember/gold ends |
 | 3 | **03 · The Finish** | The lock curls into volume while heat sparks rise off it |
-| 4 | **04 · The Salon** | The salon's real photos orbit the hair on a curved, spinning ring |
+| 4 | **04 · The Salon** | A pinned gallery: the salon's real photos slide sideways as you scroll, each one large and sharp in the centre with a caption |
 | 5–6 | Stylists / Menu | The hair settles into the background behind the content |
 | 7 | **Book** | The whole lock wraps into a glowing halo around "Your chair is waiting" |
 | 8 | Visit | Address, hours, contact |
@@ -79,8 +79,8 @@ over from the current site:
 - **Stylists:** the `#stylists` list (photo, specialty, call/text links)
 - **Address / hours / email:** the `#visit` footer and the JSON-LD block in `<head>`
 
-Photos are in `assets/img/` (optimized WebP versions of the images on the current site). The 3D
-photo ring loads the files listed in `SALON_PHOTOS` in `assets/js/world.js`.
+Photos are in `assets/img/` (optimized WebP versions of the images on the current site). The salon
+gallery is the `.shots` list in the `#salon` section of `index.html`.
 
 ## Tuning the film
 
@@ -92,20 +92,19 @@ blocks in `update()`.
 
 Handy knobs:
 
-- `OPACITY_SCALE` / `BLOOM_SCALE` — overall hair brightness and glow
-- hair colours — `uRootA/uMidA/uTipA` (before) and `uRootB/uMidB/uTipB` (after the dye) in `assets/js/hair.js`
-- strand count — `createHair({ strands })` in `world.js` (lower automatically on phones)
+- `OPACITY_SCALE` / `BLOOM_SCALE`: overall hair brightness and glow
+- hair colours: `uRootA/uMidA/uTipA` (before) and `uRootB/uMidB/uTipB` (after the dye) in `assets/js/hair.js`
+- strand count: `createHair({ strands })` in `world.js` (lower automatically on phones)
 
 ## How it's built
 
 ```
-index.html            semantic page — every word is real, crawlable HTML
+index.html            semantic page; every word is real, crawlable HTML
 assets/css/style.css  layout, type, scroll-linked reveals
 assets/js/main.js     smooth scroll (Lenis) → film position T → DOM + 3D
 assets/js/world.js    renderer, post-processing, timeline, choreography
 assets/js/hair.js     GPU hair: ribbons + Kajiya-Kay sheen, cut / dye / curl / halo
 assets/js/scissors.js procedural rose-gold shears (no model files)
-assets/js/gallery.js  curved photo panels with velocity-based RGB split
 assets/js/particles.js light dust + heat sparks
 ```
 
@@ -125,8 +124,8 @@ The site targets WCAG 2.2 Level AA, the standard used for ADA web compliance.
   measured from rendered pixels across the whole film. For each text run, the brightest
   background behind its glyphs was compared against the text colour. Every run meets 4.5:1
   (3:1 for large text) on desktop and phone. Text sits on dark scrims that fade in with it.
-- **Motion (2.2.2):** a Pause/Play button in the nav freezes all ambient motion: hair, particles,
-  marquee and CSS loops. It starts paused for visitors with `prefers-reduced-motion`, which also
+- **Motion (2.2.2):** a Pause/Play button in the nav freezes all ambient motion: hair, particles
+  and CSS loops. It starts paused for visitors with `prefers-reduced-motion`, which also
   turns off smooth-scroll inertia. Scroll-driven changes still follow the user.
 - **Keyboard:**
   - A skip link is the first tab stop.
@@ -136,7 +135,7 @@ The site targets WCAG 2.2 Level AA, the standard used for ADA web compliance.
   - In-page links move focus to their section.
   - The mobile menu moves focus in, makes the page behind it inert, and closes on Escape.
 - **Screen readers:**
-  - The 3D canvas, marquee and progress rail are decorative and hidden from assistive tech.
+  - The 3D canvas and progress rail are decorative and hidden from assistive tech.
   - Every section is a labelled landmark under a single `h1`.
   - Call/Text buttons name the stylist and number.
   - New-tab links say so.

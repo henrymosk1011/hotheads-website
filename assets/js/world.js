@@ -1,5 +1,5 @@
 /**
- * World — owns the renderer and every 3D element, and maps a single number
+ * World: owns the renderer and every 3D element, and maps a single number
  * (the scroll "film position" T) to the whole scene. T runs from 0 at the
  * top of the page to the number of scenes at the bottom; each integer is
  * the start of a section:
@@ -19,7 +19,6 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { createHair } from './hair.js';
 import { createScissors } from './scissors.js';
-import { createGallery } from './gallery.js';
 import { createDust, createSparks } from './particles.js';
 
 /* ------------------------------------------------------------------ */
@@ -30,39 +29,39 @@ import { createDust, createSparks } from './particles.js';
 const KEYS = [
   { t: 0.0, cam: [0, 0.1, 10.5], look: [0.2, 0.1, 0], lock: [-4.4, -3.6, -1.2], rot: [0.1, 0.2, 0.46], len: 10,
     spread: 0.55, wave: 1, wind: 1, curl: 0, clump: 0, twist: 0.8, ring: 0, ringR: 2.6, op: 0.44, exp: 1.0,
-    bloom: 0.95, glow: [0.24, 0.07, 0.42], gallery: 0, sparks: 0, dust: 0.55, aberr: 0.0 },
+    bloom: 0.95, glow: [0.24, 0.07, 0.42], sparks: 0, dust: 0.55, aberr: 0.0 },
   { t: 0.55, cam: [0.6, 0.3, 9.2], look: [0.4, 0.15, 0], lock: [-5.6, -1.5, -0.6], rot: [0.05, 0.12, 0.2], spread: 0.35, op: 0.38 },
-  // 01 · Cut — cut point sits at world (0.9, 0, 0)
+  // 01 · Cut: cut point sits at world (0.9, 0, 0)
   { t: 1.0, cam: [1.9, 0.85, 7.6], look: [0.7, 0.42, 0], lock: [-4.7, 0, 0], rot: [0, 0, 0], wave: 0.55, spread: 0.2, twist: 0.4, bloom: 0.9, op: 0.36 },
   { t: 1.33, cam: [1.5, 0.7, 7.0], look: [0.8, 0.32, 0] },
   { t: 1.45, cam: [1.4, 0.35, 7.0], look: [0.7, 0.0, 0], wave: 0.75 },
   { t: 1.62, cam: [1.0, 0.2, 7.6], look: [0.6, -0.1, 0], glow: [0.32, 0.06, 0.3] },
-  // 02 · Color — lock on the left, text on the right
+  // 02 · Color: lock on the left, text on the right
   { t: 2.0, cam: [-0.3, 0.4, 8.0], look: [-1.0, 0.1, 0], lock: [-6.3, -0.5, -0.4], rot: [0, -0.3, 0.14], wave: 0.9, spread: 0.3, twist: 0.6,
     glow: [0.4, 0.05, 0.25], bloom: 1.0 },
   { t: 2.6, cam: [-0.1, 0.2, 7.3], look: [-1.1, 0.0, 0], rot: [0, -0.42, 0.1], glow: [0.42, 0.08, 0.16] },
-  // 03 · Style — curls, volume, heat
+  // 03 · Style: curls, volume, heat
   { t: 3.0, cam: [0.4, 0.6, 8.2], look: [1.6, 0.0, 0], lock: [0.1, -0.35, 0], rot: [0, -0.3, 0.14], spread: 0.45, curl: 0, twist: 1.0,
     glow: [0.36, 0.08, 0.3], sparks: 0, op: 0.34 },
   { t: 3.18, op: 0.26 },
   { t: 3.3, curl: 1, clump: 1, spread: 0.45, sparks: 0.9, cam: [2.0, 1.0, 7.4], look: [1.8, 0.0, 0] },
   { t: 3.62, curl: 0.9, clump: 1, spread: 0.55, sparks: 0.7, cam: [3.4, 1.3, 6.6], look: [1.9, 0.05, 0], wave: 0.8 },
-  // 04 · Salon — photo ring orbits the hair
-  { t: 4.0, cam: [0, 2.7, 15.2], look: [0, -0.35, 0], lock: [-1.9, -1.75, 0], rot: [0, 0, 0.08], curl: 0.8, clump: 0.85, spread: 0.45, sparks: 0.15,
-    gallery: 1, glow: [0.26, 0.07, 0.42], bloom: 0.85, op: 0.28 },
-  { t: 4.62, cam: [0, 1.7, 13.6], look: [0, -0.2, 0], gallery: 1 },
-  { t: 4.95, gallery: 0, cam: [0, 0.6, 11], sparks: 0 },
-  // 05 · Stylists — hair settles behind the cards
+  // 04 · Salon: the photos take the stage; the hair drifts low and dim behind them
+  { t: 4.0, cam: [0, 0.4, 11], look: [0, 0, 0], lock: [-3.6, -4.6, -4], rot: [0, 0.1, 0.14], curl: 0.6, clump: 0.6, spread: 0.6, sparks: 0,
+    wave: 0.9, glow: [0.2, 0.06, 0.34], bloom: 0.75, op: 0.16 },
+  { t: 4.62, lock: [-1.0, -4.4, -4], rot: [0, 0.1, 0.18] },
+  { t: 4.95, cam: [0, 0.4, 11] },
+  // 05 · Stylists: hair settles behind the cards
   { t: 5.0, cam: [0, 0.2, 10.5], look: [0, 0, 0], lock: [1.6, -1.6, -3.5], rot: [0, -0.2, 0.3], curl: 0.55, clump: 0.6, spread: 0.6, op: 0.24,
     glow: [0.18, 0.05, 0.3], bloom: 0.75, dust: 0.4 },
   // 06 · Menu
   { t: 6.0, lock: [-8.6, 0.2, -3.0], rot: [0, 0.3, -0.12], curl: 0.35, op: 0.26, glow: [0.22, 0.05, 0.22] },
-  // 07 · Book — the lock becomes a halo
+  // 07 · Book: the lock becomes a halo
   { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.26,
     glow: [0.36, 0.06, 0.4], bloom: 1.0, sparks: 0 },
   { t: 7.12, ring: 1, ringR: 3.35, op: 0.22, bloom: 0.9, sparks: 0.25, dust: 0.6 },
   { t: 7.52, cam: [0, 0.0, 10.0], look: [0, 0, 0], ring: 1 },
-  // 08 · Visit — the halo scrolls away with its section so the footer reads cleanly
+  // 08 · Visit: the halo scrolls away with its section so the footer reads cleanly
   { t: 8.0, cam: [0, -6.6, 10.0], look: [0, -6.6, 0], op: 0.22, bloom: 0.8, glow: [0.16, 0.04, 0.26] },
   { t: 9.0, cam: [0, -7.2, 10.0], look: [0, -7.2, 0] },
 ];
@@ -250,12 +249,7 @@ function createStudio() {
   return studio;
 }
 
-export const SALON_PHOTOS = [
-  'salon-inside', 'purple-mural', 'tools', 'salon-chairs', 'shampoo',
-  'storefront', 'hood-dryers', 'busy-day', 'wash-stations', 'curls-tools',
-];
-
-export async function createWorld(canvas, { capture = false, reducedMotion = false, basePath = './assets/' } = {}) {
+export async function createWorld(canvas, { capture = false, reducedMotion = false } = {}) {
   const isSmall = Math.min(window.innerWidth, window.innerHeight) < 700 || matchMedia('(pointer: coarse)').matches;
 
   const renderer = new THREE.WebGLRenderer({
@@ -356,22 +350,6 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   const sparks = createSparks(isSmall ? 260 : 520);
   scene.add(dust.points, sparks.points);
 
-  // Gallery of real salon photos
-  const loader = new THREE.TextureLoader();
-  const placeholder = new THREE.DataTexture(new Uint8Array([40, 20, 60, 255]), 1, 1);
-  placeholder.needsUpdate = true;
-  const gallery = createGallery(SALON_PHOTOS.map(() => placeholder), { radius: isSmall ? 4.4 : 5.0, height: 1.6 });
-  scene.add(gallery.group);
-  // Photos stream in on their own; nothing waits for them. Each one is pushed
-  // to the GPU as it arrives so the gallery never stalls on first sight.
-  SALON_PHOTOS.forEach((name, i) => {
-    loader.load(`${basePath}img/salon/${name}.webp`, (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = 4;
-      gallery.setTextureImage(i, tex);
-      renderer.initTexture(tex);
-    });
-  });
 
   // Post-processing
   const size = new THREE.Vector2();
@@ -392,9 +370,6 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   const look = new THREE.Vector3();
   const pointer = new THREE.Vector2();
   const pointerSmooth = new THREE.Vector2();
-  let galleryRot = 0;
-  let lastGalleryRot = 0;
-  let galleryVel = 0;
   let scrollSpeed = 0;
   let strandCount = hair.strands;
 
@@ -526,18 +501,6 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     u.uDye.value = smooth(0.06, 0.52, cc);
     u.uSheen.value = smooth(0.03, 0.12, cc) * (1 - smooth(0.42, 0.62, cc));
 
-    /* 04 · Gallery -------------------------------------------------- */
-    const gv = clamp01(k.gallery);
-    gallery.group.visible = gv > 0.01;
-    gallery.uniforms.uOpacity.value = gv;
-    galleryRot = 0.6 + (T - 4) * 2.4;
-    const gVel = (galleryRot - lastGalleryRot) / Math.max(dt, 1 / 240);
-    lastGalleryRot = galleryRot;
-    galleryVel += (gVel - galleryVel) * (1 - Math.exp(-dt * 4));
-    gallery.group.rotation.set(0.12, galleryRot + t * 0.04, 0.03);
-    gallery.group.scale.setScalar(lerp(0.85, 1, gv));
-    gallery.uniforms.uVel.value = THREE.MathUtils.clamp(galleryVel * 0.2, -1.2, 1.2) * gv;
-
     /* Particles & light --------------------------------------------- */
     const visLen = k.len * (cutOn ? 0.56 : 1) * (1 - 0.3 * u.uCurl.value);
     v3.set(visLen * 0.55, 0, 0);
@@ -595,7 +558,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   // (shears, dye drops, photo ring), so nothing stalls mid-scroll. Uses the
   // browser's parallel compile when available, off the main thread.
   async function warmUp() {
-    const hidden = [scissors.group, gallery.group, ...drops].filter((o) => !o.visible);
+    const hidden = [scissors.group, ...drops].filter((o) => !o.visible);
     hidden.forEach((o) => { o.visible = true; });
     try {
       const parallel = renderer.extensions.has('KHR_parallel_shader_compile');

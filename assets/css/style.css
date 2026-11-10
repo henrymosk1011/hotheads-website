@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Hotheads Salon — concept redesign
+   Hotheads Salon: concept redesign
    Dark, editorial, purple-to-ember. The 3D film lives on a fixed canvas
    behind everything; the page is ordinary, accessible HTML on top.
    ========================================================================== */
@@ -141,7 +141,7 @@ main, .nav, .rail, .visit { position: relative; z-index: 2; }
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: rgba(247, 240, 251, 0.88);
 }
 .eyebrow::before {
   content: "";
@@ -417,7 +417,6 @@ html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition:
 
 /* ---------- Chapters (sticky stages) ---------- */
 .chapter { position: relative; height: 270vh; }
-.chapter--salon { height: 280vh; }
 .chapter--book { height: 210vh; }
 .stage {
   position: sticky;
@@ -442,6 +441,7 @@ html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition:
 .chapter__copy::before { opacity: var(--s, 0); }
 /* the halo's centre stays dark the whole time, so its text never fights the ring */
 .chapter--book .chapter__copy::before { opacity: 1; inset: -22% -26%; }
+.gallery__intro::before { opacity: 1; }
 html:not(.js) .chapter__copy::before { opacity: 1; }
 /* closest-side guarantees the glow reaches full transparency before every edge (no hard lines) */
 .hero__inner::before { inset: -22% -26% -24% -22%; background: radial-gradient(closest-side, rgba(7, 4, 11, 0.86), rgba(7, 4, 11, 0.66) 50%, rgba(7, 4, 11, 0)); }
@@ -518,32 +518,6 @@ html.js [data-reveal]:focus-within { opacity: 1; transform: none; }
 .chips span { color: var(--muted); }
 .chips b { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1; }
 .chips a b { font-family: var(--sans); font-size: 14px; font-weight: 600; background: var(--hot); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-/* ---------- Marquee ---------- */
-.marquee {
-  position: relative;
-  overflow: hidden;
-  padding: 7vh 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(7, 4, 11, 0.2), rgba(7, 4, 11, 0.55));
-}
-.marquee__track {
-  display: flex;
-  width: max-content;
-  transform: translate3d(var(--x, 0px), 0, 0);
-  will-change: transform;
-}
-.marquee span {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: clamp(3rem, 8vw, 8.5rem);
-  line-height: 1;
-  white-space: nowrap;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(247, 240, 251, 0.55);
-}
-.marquee i { font-style: normal; -webkit-text-stroke: 0; color: var(--magenta); font-size: 0.5em; vertical-align: middle; padding: 0 0.35em; }
 
 /* ---------- Blocks ---------- */
 .block {
@@ -645,6 +619,85 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
 .menu__col dd { font-family: var(--serif); font-size: 22px; white-space: nowrap; }
 .menu__col dd a { font-family: var(--sans); font-size: 14px; font-weight: 600; }
 
+/* ---------- Salon gallery (pinned, slides sideways) ---------- */
+/* The section's height is set from the track width in JS so one pixel of
+   scroll moves the photos one pixel sideways. */
+.chapter--gallery { height: 500vh; }
+.stage--gallery {
+  display: flex;
+  align-items: center;
+  padding: 84px 0 24px;
+}
+.gallery__track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 4vw, 72px);
+  width: max-content;
+  padding: 0 calc(50vw - 20rem) 0 var(--gutter);
+  will-change: transform;
+}
+.gallery__intro { flex: none; width: min(30rem, 84vw); }
+.gallery__hint {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gallery__hint span { display: inline-block; margin-left: 8px; color: var(--magenta); }
+.shots { display: flex; align-items: center; gap: clamp(28px, 4vw, 72px); }
+.shot {
+  --ar: 1.5; --f: 1; --d: 0;
+  --max-h: min(66vh, 680px);
+  --max-w: 62vw;
+  --img-h: min(var(--max-h), calc(var(--max-w) / var(--ar)));
+  flex: none;
+}
+.shot--p { --ar: 0.6667; }
+.shot--43 { --ar: 1.3333; }
+.shot figure {
+  position: relative;
+  transform: perspective(1600px) rotateY(calc(var(--d) * -24deg)) scale(calc(0.82 + var(--f) * 0.18));
+  transform-origin: center;
+  will-change: transform;
+}
+/* photos out of focus sink back a little; the centred one is at full brightness */
+.shot figure::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; right: 0;
+  height: var(--img-h);
+  border-radius: 20px;
+  background: #07040b;
+  opacity: calc((1 - var(--f)) * 0.5);
+  pointer-events: none;
+}
+.shot img {
+  display: block;
+  height: var(--img-h);
+  width: auto;
+  aspect-ratio: var(--ar);
+  object-fit: cover;
+  border-radius: 20px;
+  background: var(--bg-2);
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--line);
+}
+.shot figcaption {
+  display: inline-flex;
+  gap: 12px;
+  align-items: baseline;
+  margin-top: 16px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  /* a solid pill so captions stay readable whatever the 3D is doing behind */
+  background: rgba(7, 4, 11, 0.86);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+}
+.shot figcaption span { font-variant-numeric: tabular-nums; color: var(--muted); letter-spacing: 0.12em; font-size: 12px; }
+
 /* Book */
 .book__title { font-size: clamp(3.6rem, 9vw, 9.5rem); }
 .book__actions { justify-content: center; }
@@ -706,6 +759,9 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   .chapter__num { font-size: 52vw; top: 12vh; bottom: auto; }
   .stage__caption { left: auto; right: var(--gutter); top: 22%; }
   .chips li { font-size: 13px; padding: 9px 13px; }
+  .stage--gallery { align-items: center; padding-bottom: 24px; background: none; }
+  .gallery__track { padding-right: 8vw; }
+  .shot { --max-h: 58vh; --max-w: 84vw; }
   .chips b { font-size: 18px; }
   .team {
     display: flex;
@@ -772,9 +828,10 @@ html.is-paused *, html.is-paused *::before, html.is-paused *::after { animation-
   html.js [data-reveal] { transform: none; }
   .hero__inner { transform: none; }
   .chapter__num { transform: none; }
+  .shot figure { transform: none; }
 }
 
-/* Deterministic frame capture (preview video) — no time-based transitions */
+/* Deterministic frame capture (preview video): no time-based transitions */
 html.is-capture *, html.is-capture *::before, html.is-capture *::after { transition: none !important; animation-play-state: paused !important; }
 
 /* ---------- 404 ---------- */

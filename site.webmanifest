@@ -1,7 +1,7 @@
 {
   "name": "Hotheads Salon",
   "short_name": "Hotheads",
-  "description": "Hair salon in Pasadena, CA — cuts, color, highlights and blow-drys.",
+  "description": "Hair salon in Pasadena, CA: cuts, color, highlights and blow-drys.",
   "start_url": "/",
   "display": "browser",
   "background_color": "#07040b",

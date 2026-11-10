@@ -1,5 +1,5 @@
 /**
- * Hair — a lock of a few thousand strands, simulated entirely on the GPU.
+ * Hair: a lock of a few thousand strands, simulated entirely on the GPU.
  *
  * Every strand is a camera-facing ribbon. Its shape is computed in the vertex
  * shader from a handful of uniforms, so the whole lock can be cut, dyed,

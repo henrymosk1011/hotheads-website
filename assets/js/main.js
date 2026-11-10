@@ -18,8 +18,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* ------------------------------------------------------------------ */
 /* Motion control (WCAG 2.2.2 Pause, Stop, Hide)                       */
-/* Ambient motion — wind in the hair, particles, marquee, CSS loops —  */
-/* can be paused. Scroll-driven changes still follow the user.         */
+/* Ambient motion (wind in the hair, particles, CSS loops) can be       */
+/* paused. Scroll-driven changes still follow the user.                */
 /* ------------------------------------------------------------------ */
 const motionBtn = document.querySelector('.motion-toggle');
 const motionLabel = motionBtn?.querySelector('.motion-toggle__label');
@@ -116,11 +116,51 @@ const chapters = [...document.querySelectorAll('.chapter')].map((el) => ({
   height: 0,
   lastP: -1,
 }));
+const galleryData = chapters.find((c) => c.el.classList.contains('chapter--gallery'));
 const hero = document.querySelector('.hero');
 const navLinks = [...document.querySelectorAll('[data-link]')];
 const railItems = [...document.querySelectorAll('[data-rail]')];
 const railTrack = document.querySelector('.rail__track');
-const marquee = document.querySelector('.marquee__track');
+
+/* Salon gallery: a pinned section whose photos slide sideways with scroll */
+const galleryChapter = document.querySelector('.chapter--gallery');
+const galleryTrack = galleryChapter?.querySelector('.gallery__track');
+const galleryStage = galleryChapter?.querySelector('.stage');
+let shotItems = [];
+let galleryTravel = 0;
+let galleryStageW = 1;
+let lastGX = null;
+
+function measureGallery() {
+  if (!galleryTrack) return;
+  galleryTrack.style.transform = 'none';
+  galleryStageW = galleryStage.clientWidth;
+  shotItems = [...galleryTrack.querySelectorAll('.shot')].map((el) => ({ el, center: el.offsetLeft + el.offsetWidth / 2 }));
+  const lastCenter = shotItems.length ? shotItems[shotItems.length - 1].center : 0;
+  // travel until the last photo sits in the middle of the screen
+  galleryTravel = Math.max(0, lastCenter - galleryStageW / 2);
+  // roughly one pixel of scroll per pixel of sideways travel, plus a short dwell
+  galleryChapter.style.height = `${Math.round(galleryTravel + vh * 1.5)}px`;
+  lastGX = null;
+}
+
+function updateGallery(y) {
+  const c = galleryData;
+  if (!galleryTrack || !c) return;
+  const span = Math.max(1, c.height - vh);
+  const p = (y - c.top) / span;
+  if (p < -0.5 || p > 1.5) return;
+  const q = clamp01((p - 0.03) / 0.9);
+  const x = Math.round(-q * galleryTravel * 10) / 10;
+  if (x === lastGX) return;
+  lastGX = x;
+  galleryTrack.style.transform = `translate3d(${x}px, 0, 0)`;
+  for (const s of shotItems) {
+    const d = Math.max(-1.5, Math.min(1.5, (s.center + x - galleryStageW / 2) / galleryStageW));
+    s.el.style.setProperty('--d', d.toFixed(3));
+    s.el.style.setProperty('--f', Math.max(0, 1 - Math.abs(d) * 1.8).toFixed(3));
+  }
+}
 
 let anchors = [];
 let maxScroll = 1;
@@ -132,6 +172,7 @@ function absTop(el) {
 
 function measure() {
   vh = window.innerHeight;
+  measureGallery();
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
   anchors = scenes.map((el) => Math.min(absTop(el), maxScroll));
   for (const c of chapters) {
@@ -156,8 +197,6 @@ function filmPosition(y) {
 
 const clamp01 = (x) => Math.min(1, Math.max(0, x));
 const ease = (x) => x * x * (3 - 2 * x);
-let marqueeX = 0;
-let lastTime = 0;
 
 let lastHero = -1;
 let lastActive = -1;
@@ -166,7 +205,7 @@ function updateDom(y, T, time, velocity) {
   const heroP = Math.round(clamp01(y / (vh * 0.9)) * 1000) / 1000;
   if (heroP !== lastHero) { hero.style.setProperty('--hero', String(heroP)); lastHero = heroP; }
   root.classList.toggle('is-scrolled', y > 30);
-  root.classList.toggle('show-rail', T > 0.75 && T < 4.9);
+  root.classList.toggle('show-rail', T > 0.75 && T < 3.9); // hidden once the photo gallery starts
 
   for (const c of chapters) {
     const span = Math.max(1, c.height - vh);
@@ -209,15 +248,7 @@ function updateDom(y, T, time, velocity) {
   railItems.forEach((li) => li.classList.toggle('is-active', Number(li.dataset.rail) === Math.floor(T + 0.15)));
   if (railTrack) railTrack.style.setProperty('--rail', clamp01((T - 1) / 4).toFixed(4));
 
-  // marquee drifts with time and kicks with scroll speed (pauses with motion)
-  if (marquee && !paused) {
-    const dtm = lastTime ? Math.min(0.1, time - lastTime) : 0;
-    marqueeX -= (0.6 + Math.min(Math.abs(velocity) * 14, 18)) * dtm * 60;
-    const w = marquee.scrollWidth / 2;
-    if (w > 0) marqueeX = ((marqueeX % w) + w) % w - w;
-    marquee.style.setProperty('--x', `${marqueeX.toFixed(1)}px`);
-  }
-  lastTime = time;
+  updateGallery(y);
 }
 
 /* Plain in-view reveals for normal flowing sections */
