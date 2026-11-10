@@ -28,12 +28,12 @@ import { createDust, createSparks } from './particles.js';
 
 // Every key lists only what changes; missing channels carry forward.
 const KEYS = [
-  { t: 0.0, cam: [0, 0.1, 10.5], look: [0.2, 0.1, 0], lock: [-7.4, -2.5, -1.4], rot: [0.1, 0.22, 0.32], len: 10,
-    spread: 0.55, wave: 1, wind: 1, curl: 0, clump: 0, twist: 0.8, ring: 0, ringR: 2.6, op: 0.36, exp: 1.0,
+  { t: 0.0, cam: [0, 0.1, 10.5], look: [0.2, 0.1, 0], lock: [-4.4, -3.6, -1.2], rot: [0.1, 0.2, 0.46], len: 10,
+    spread: 0.55, wave: 1, wind: 1, curl: 0, clump: 0, twist: 0.8, ring: 0, ringR: 2.6, op: 0.44, exp: 1.0,
     bloom: 0.95, glow: [0.24, 0.07, 0.42], gallery: 0, sparks: 0, dust: 0.55, aberr: 0.0 },
-  { t: 0.55, cam: [0.6, 0.3, 9.2], look: [0.4, 0.15, 0], lock: [-6.2, -1.2, -0.6], rot: [0.05, 0.12, 0.16], spread: 0.35 },
+  { t: 0.55, cam: [0.6, 0.3, 9.2], look: [0.4, 0.15, 0], lock: [-5.6, -1.5, -0.6], rot: [0.05, 0.12, 0.2], spread: 0.35, op: 0.38 },
   // 01 · Cut — cut point sits at world (0.9, 0, 0)
-  { t: 1.0, cam: [1.9, 0.85, 7.6], look: [0.7, 0.42, 0], lock: [-4.7, 0, 0], rot: [0, 0, 0], wave: 0.55, spread: 0.2, twist: 0.4, bloom: 0.9 },
+  { t: 1.0, cam: [1.9, 0.85, 7.6], look: [0.7, 0.42, 0], lock: [-4.7, 0, 0], rot: [0, 0, 0], wave: 0.55, spread: 0.2, twist: 0.4, bloom: 0.9, op: 0.36 },
   { t: 1.33, cam: [1.5, 0.7, 7.0], look: [0.8, 0.32, 0] },
   { t: 1.45, cam: [1.4, 0.35, 7.0], look: [0.7, 0.0, 0], wave: 0.75 },
   { t: 1.62, cam: [1.0, 0.2, 7.6], look: [0.6, -0.1, 0], glow: [0.32, 0.06, 0.3] },
@@ -48,7 +48,7 @@ const KEYS = [
   { t: 3.3, curl: 1, clump: 1, spread: 0.45, sparks: 0.9, cam: [2.0, 1.0, 7.4], look: [1.8, 0.0, 0] },
   { t: 3.62, curl: 0.9, clump: 1, spread: 0.55, sparks: 0.7, cam: [3.4, 1.3, 6.6], look: [1.9, 0.05, 0], wave: 0.8 },
   // 04 · Salon — photo ring orbits the hair
-  { t: 4.0, cam: [0, 2.7, 15.2], look: [0, -0.35, 0], lock: [-1.9, -1.0, 0], rot: [0, 0, 0.08], curl: 0.8, clump: 0.85, spread: 0.45, sparks: 0.15,
+  { t: 4.0, cam: [0, 2.7, 15.2], look: [0, -0.35, 0], lock: [-1.9, -1.75, 0], rot: [0, 0, 0.08], curl: 0.8, clump: 0.85, spread: 0.45, sparks: 0.15,
     gallery: 1, glow: [0.26, 0.07, 0.42], bloom: 0.85, op: 0.28 },
   { t: 4.62, cam: [0, 1.7, 13.6], look: [0, -0.2, 0], gallery: 1 },
   { t: 4.95, gallery: 0, cam: [0, 0.6, 11], sparks: 0 },
@@ -58,13 +58,13 @@ const KEYS = [
   // 06 · Menu
   { t: 6.0, lock: [-8.6, 0.2, -3.0], rot: [0, 0.3, -0.12], curl: 0.35, op: 0.26, glow: [0.22, 0.05, 0.22] },
   // 07 · Book — the lock becomes a halo
-  { t: 7.0, cam: [0, 0.1, 9.6], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.34,
+  { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.3,
     glow: [0.36, 0.06, 0.4], bloom: 1.0, sparks: 0 },
-  { t: 7.32, ring: 1, ringR: 2.65, op: 0.34, bloom: 1.15, sparks: 0.35, dust: 0.65 },
-  { t: 7.6, cam: [0, 0.0, 9.2], ring: 1 },
-  // 08 · Visit
-  { t: 8.0, cam: [0, -0.8, 12], look: [0, -0.4, 0], op: 0.3, bloom: 1.0, glow: [0.2, 0.05, 0.3] },
-  { t: 9.0, cam: [0, -1.4, 13.5], look: [0, -0.6, 0] },
+  { t: 7.32, ring: 1, ringR: 3.35, op: 0.26, bloom: 0.9, sparks: 0.25, dust: 0.6 },
+  { t: 7.52, cam: [0, 0.0, 10.0], look: [0, 0, 0], ring: 1 },
+  // 08 · Visit — the halo scrolls away with its section so the footer reads cleanly
+  { t: 8.0, cam: [0, -6.6, 10.0], look: [0, -6.6, 0], op: 0.22, bloom: 0.8, glow: [0.16, 0.04, 0.26] },
+  { t: 9.0, cam: [0, -7.2, 10.0], look: [0, -7.2, 0] },
 ];
 
 function monotoneTrack(times, values) {
@@ -437,8 +437,8 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     // Portrait screens: lift the hero lock into the open space above the headline
     if (camera.aspect < 0.85) {
       const hero = 1 - smooth(0.45, 1.0, T);
-      lock.position.x += 1.6 * hero;
-      lock.position.y += 3.3 * hero;
+      lock.position.x += -1.4 * hero;
+      lock.position.y += 3.6 * hero;
     }
     lock.rotation.set(k.rot[0], k.rot[1], k.rot[2]);
     lock.updateMatrixWorld();

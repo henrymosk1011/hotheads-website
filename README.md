@@ -6,6 +6,10 @@ standalone static site you can preview, tweak and launch whenever you're ready.
 
 ![Hero](docs/hero.jpg)
 
+| The cut | The color | The halo |
+| --- | --- | --- |
+| ![Shears snipping the lock](docs/cut.jpg) | ![Balayage dye on the lock](docs/color.jpg) | ![Halo around the booking call-to-action](docs/halo.jpg) |
+
 ## The film
 
 The star of the site is a lock of hair: about 2,800 individually shaded strands rendered on the
@@ -28,7 +32,9 @@ page's sections). Scrolling back rewinds the film: the hair un-cuts and the dye 
 
 ## Run it locally
 
-No build step. Any static file server works, because ES modules won't load from `file://`:
+No build step. Serve the repository root with any static file server. ES modules won't load
+from `file://`, and asset URLs are root-absolute (`/assets/...`), so serve it from a domain
+root, not a sub-folder:
 
 ```bash
 python3 -m http.server 8080
@@ -36,11 +42,33 @@ python3 -m http.server 8080
 
 Then open <http://localhost:8080>.
 
-## Deploy
+## Deploy (Vercel)
 
-It's plain static files, so it works on any static host: GitHub Pages, Netlify, Vercel or
-Cloudflare Pages. Serve the repository root. All libraries and fonts are vendored in
-`assets/vendor` and `assets/fonts`, so there are no third-party CDN calls at runtime.
+The repo deploys to Vercel as a static site with no framework and no build command.
+`vercel.json` sets:
+
+- **Security headers:** a strict Content-Security-Policy (no inline script except the import
+  map, which is allowed by its SHA-256 hash), `nosniff`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy` and COOP.
+- **Caching:** vendored libraries and fonts are cached for a year (`immutable`), images for
+  30 days, JS/CSS for an hour.
+- **No indexing on `*.vercel.app`:** a host-matched `X-Robots-Tag: noindex` keeps the preview
+  URL out of Google. It switches off automatically once the real domain is attached.
+
+> **If you edit the import map in `index.html`**, recompute its hash and update the
+> `script-src` in `vercel.json`, or the browser will block it:
+> `python3 -c "import re,hashlib,base64;s=open('index.html').read();m=re.search(r'<script type=\"importmap\">(.*?)</script>',s,re.S);print('sha256-'+base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode())"`
+
+All libraries and fonts are vendored in `assets/vendor` and `assets/fonts`, so there are no
+third-party CDN calls at runtime.
+
+## Going live on hotheadspasadena.com
+
+1. In Vercel, add `hotheadspasadena.com` and `www.hotheadspasadena.com` to the project
+   (Settings → Domains), then point DNS at Vercel as shown there.
+2. Submit `https://www.hotheadspasadena.com/sitemap.xml` in Google Search Console.
+3. The canonical URL, Open Graph tags, structured data and sitemap already use the `www`
+   domain, so nothing in the code needs to change.
 
 ## Editing content
 
@@ -84,11 +112,52 @@ assets/js/particles.js light dust + heat sparks
 - **Rendering:** three.js r187 with MSAA, an HDR pipeline, bloom, a film-grain/vignette pass and neutral tone mapping
 - **Performance:** fewer strands and particles on phones; quality steps down automatically if
   the frame rate drops; DPR capped at 1.75
-- **Accessibility:** the canvas is decorative (`aria-hidden`) and all content is HTML; there's a
-  skip link and visible focus states. `prefers-reduced-motion` turns off smooth scrolling and
-  inertia and slows the ambient motion. Without WebGL or JavaScript the page still reads top to
-  bottom.
-- **SEO:** title/description/Open Graph tags plus `HairSalon` structured data
+- **Accessibility:** see below
+- **SEO:** see below
+
+## Accessibility (WCAG 2.2 AA)
+
+The site targets WCAG 2.2 Level AA, the standard used for ADA web compliance.
+
+- **Automated:** axe-core reports zero violations on desktop (1440×900) and phone (390×844),
+  both at load and with every scroll-driven section revealed.
+- **Contrast over the 3D:** axe can't measure text over a live canvas, so contrast was
+  measured from rendered pixels across the whole film. For each text run, the brightest
+  background behind its glyphs was compared against the text colour. Every run meets 4.5:1
+  (3:1 for large text) on desktop and phone. Text sits on dark scrims that fade in with it.
+- **Motion (2.2.2):** a Pause/Play button in the nav freezes all ambient motion: hair, particles,
+  marquee and CSS loops. It starts paused for visitors with `prefers-reduced-motion`, which also
+  turns off smooth-scroll inertia. Scroll-driven changes still follow the user.
+- **Keyboard:**
+  - A skip link is the first tab stop.
+  - Every control is a real link or button with a visible focus ring.
+  - Focused content is never left invisible mid-animation.
+  - `scroll-padding` stops the sticky nav from covering focus.
+  - In-page links move focus to their section.
+  - The mobile menu moves focus in, makes the page behind it inert, and closes on Escape.
+- **Screen readers:**
+  - The 3D canvas, marquee and progress rail are decorative and hidden from assistive tech.
+  - Every section is a labelled landmark under a single `h1`.
+  - Call/Text buttons name the stylist and number.
+  - New-tab links say so.
+- **Fallbacks:** without WebGL or JavaScript the page still reads top to bottom.
+
+Automated checks catch most, but not all, accessibility problems. Before launch, do a
+quick manual pass with VoiceOver (iOS/macOS) and NVDA (Windows).
+
+## SEO
+
+- Keyword-bearing `<title>`, meta description and `h1` ("Hotheads hair salon · Pasadena, CA")
+- Canonical URL, Open Graph and Twitter card tags with a 1200×630 share image
+- JSON-LD `@graph`:
+  - `HairSalon`: address, map, phone, email and price range
+  - `OfferCatalog`: every service, with its starting price from the current menu
+  - `employee` entries for each stylist
+  - `WebSite` and `WebPage`
+- `robots.txt`, an XML sitemap with image entries, a web manifest, favicons and a branded 404
+- Performance: content never waits on the 3D (it fades in when ready), fonts are preloaded,
+  modules are preloaded, images are lazy-loaded with fixed dimensions (no layout shift), and
+  vendored assets get long-lived cache headers
 
 ## Credits
 
