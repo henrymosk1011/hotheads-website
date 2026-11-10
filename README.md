@@ -51,7 +51,7 @@ The repo deploys to Vercel as a static site with no framework and no build comma
   map, which is allowed by its SHA-256 hash), `nosniff`, `X-Frame-Options`, `Referrer-Policy`,
   `Permissions-Policy` and COOP.
 - **Caching:** vendored libraries and fonts are cached for a year (`immutable`), images for
-  30 days, JS/CSS for an hour.
+  30 days. JS/CSS always revalidate, so edits show up on a normal reload.
 - **No indexing on `*.vercel.app`:** a host-matched `X-Robots-Tag: noindex` keeps the preview
   URL out of Google. It switches off automatically once the real domain is attached.
 
