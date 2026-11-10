@@ -351,7 +351,8 @@ html.show-rail .rail { opacity: 1; }
   isolation: isolate;
   display: grid;
   gap: 22px;
-  max-width: 1400px;
+  width: fit-content;
+  max-width: min(1400px, 100%);
   transform: translate3d(0, calc(var(--hero, 0) * -14vh), 0);
   will-change: transform;
 }
@@ -411,15 +412,17 @@ html:not(.js) .pill, html:not(.js) .hero__foot { opacity: 1; transform: none; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: clamp(28px, 6vh, 64px) calc(var(--gutter) * -1) -28px;
-  padding: 18px var(--gutter) 28px;
-  background: linear-gradient(180deg, rgba(7, 4, 11, 0.55), rgba(7, 4, 11, 0.85));
+  margin-top: clamp(28px, 6vh, 64px);
+  padding-top: 18px;
   border-top: 1px solid var(--line);
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
 }
+/* The scroll cue has done its job once you scroll: fade it out before the
+   hair moves behind it, so it never needs a backdrop band. */
+html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition: opacity 0.25s linear; }
 .scroll-cue { display: inline-flex; align-items: center; gap: 12px; }
 .scroll-cue i { position: relative; width: 1px; height: 30px; background: var(--line); overflow: hidden; }
 .scroll-cue i::after { content: ""; position: absolute; left: 0; top: -40%; width: 100%; height: 40%; background: var(--hot); animation: cue 2s var(--ease) infinite; }
@@ -451,7 +454,8 @@ html:not(.js) .pill, html:not(.js) .hero__foot { opacity: 1; transform: none; }
 }
 .chapter__copy::before { opacity: var(--s, 0); }
 html:not(.js) .chapter__copy::before { opacity: 1; }
-.hero__inner::before { inset: -12% -14% -8% -16%; background: radial-gradient(64% 66% at 32% 56%, rgba(7, 4, 11, 0.84), rgba(7, 4, 11, 0.6) 55%, rgba(7, 4, 11, 0)); }
+/* closest-side guarantees the glow reaches full transparency before every edge (no hard lines) */
+.hero__inner::before { inset: -22% -26% -24% -22%; background: radial-gradient(closest-side, rgba(7, 4, 11, 0.86), rgba(7, 4, 11, 0.66) 50%, rgba(7, 4, 11, 0)); }
 .chapter__body, .hero__lede, .block__lede, .visit__col p { text-shadow: 0 1px 16px rgba(7, 4, 11, 0.8); }
 .chapter--left .chapter__copy { justify-self: start; }
 .chapter--right .chapter__copy { justify-self: end; }
