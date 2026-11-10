@@ -44,7 +44,7 @@ applyMotion();
 /* Smooth scroll                                                       */
 /* ------------------------------------------------------------------ */
 const lenis = !reducedMotion && !capture
-  ? new Lenis({ lerp: 0.09, wheelMultiplier: 0.95, smoothWheel: true })
+  ? new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true })
   : null;
 
 const scrollY = () => (lenis ? lenis.scroll : window.scrollY);
@@ -159,8 +159,12 @@ const ease = (x) => x * x * (3 - 2 * x);
 let marqueeX = 0;
 let lastTime = 0;
 
+let lastHero = -1;
+let lastActive = -1;
 function updateDom(y, T, time, velocity) {
-  hero.style.setProperty('--hero', clamp01(y / (vh * 0.9)).toFixed(4));
+  // only touch styles when a value actually changes (keeps style recalcs cheap)
+  const heroP = Math.round(clamp01(y / (vh * 0.9)) * 1000) / 1000;
+  if (heroP !== lastHero) { hero.style.setProperty('--hero', String(heroP)); lastHero = heroP; }
   root.classList.toggle('is-scrolled', y > 30);
   root.classList.toggle('show-rail', T > 0.75 && T < 4.9);
 
@@ -194,11 +198,14 @@ function updateDom(y, T, time, velocity) {
   }
 
   const active = T < 0.6 ? 0 : Math.floor(T + 0.4);
-  navLinks.forEach((a) => {
-    const on = Number(a.dataset.link) === active;
-    a.classList.toggle('is-active', on);
-    if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-  });
+  if (active !== lastActive) {
+    lastActive = active;
+    navLinks.forEach((a) => {
+      const on = Number(a.dataset.link) === active;
+      a.classList.toggle('is-active', on);
+      if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+    });
+  }
   railItems.forEach((li) => li.classList.toggle('is-active', Number(li.dataset.rail) === Math.floor(T + 0.15)));
   if (railTrack) railTrack.style.setProperty('--rail', clamp01((T - 1) / 4).toFixed(4));
 
@@ -305,7 +312,8 @@ function frame(now) {
 
   const y = scrollY();
   const target = filmPosition(y);
-  T = reducedMotion ? target : T + (target - T) * (1 - Math.exp(-dt * 5.5));
+  // Lenis already smooths the scroll; a light extra ease keeps the 3D silky without lagging the page
+  T = reducedMotion ? target : T + (target - T) * (1 - Math.exp(-dt * 9));
   const velocity = (T - prevT) / dt;
   prevT = T;
 

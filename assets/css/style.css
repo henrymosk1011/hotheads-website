@@ -34,7 +34,7 @@
   --muted: rgba(247, 240, 251, 0.76);
   --faint: rgba(247, 240, 251, 0.6);
   --line: rgba(247, 240, 251, 0.16);
-  --glass: rgba(14, 8, 22, 0.72);
+  --glass: rgba(14, 8, 22, 0.8);
   --violet: #b15cff;
   --violet-deep: #7b2cbf;
   --magenta: #ff2e88;
@@ -115,7 +115,7 @@ address { font-style: normal; }
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.4s var(--ease);
+  transition: opacity 0.7s var(--ease);
 }
 html.gl-ready #gl { opacity: 1; }
 html.no-webgl #gl { display: none; }
@@ -160,11 +160,6 @@ em.hot, .hot {
   background-clip: text;
   color: transparent;
   padding-right: 0.06em;
-  animation: hot-shift 9s ease-in-out infinite alternate;
-}
-@keyframes hot-shift {
-  from { background-position: 0% 50%; }
-  to { background-position: 100% 50%; }
 }
 
 /* ---------- Buttons ---------- */
@@ -197,9 +192,7 @@ em.hot, .hot {
 .btn--ghost {
   color: var(--ink);
   border: 1px solid rgba(247, 240, 251, 0.3);
-  background: rgba(14, 8, 22, 0.72);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: rgba(14, 8, 22, 0.8);
 }
 .btn--ghost:hover { transform: translateY(-2px); border-color: rgba(247, 240, 251, 0.4); }
 
@@ -239,9 +232,7 @@ html:not(.js) .loader, html.is-capture .loader { display: none; }
 html.is-scrolled .nav {
   padding-top: 12px;
   padding-bottom: 12px;
-  background: rgba(7, 4, 11, 0.82);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(7, 4, 11, 0.92);
   border-bottom-color: var(--line);
 }
 .nav__brand img { width: auto; height: 24px; }
@@ -274,9 +265,7 @@ html.is-scrolled .nav {
   align-content: center;
   gap: 8px;
   padding: 90px var(--gutter) 40px;
-  background: rgba(7, 4, 11, 0.92);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  background: rgba(7, 4, 11, 0.97);
 }
 .mobile-menu[hidden] { display: none; }
 .mobile-menu a:not(.btn) {
@@ -364,9 +353,7 @@ html.show-rail .rail { opacity: 1; }
   padding: 7px 14px 7px 7px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(14, 8, 22, 0.72);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(14, 8, 22, 0.8);
   font-size: 13px;
   color: var(--muted);
   text-decoration: none;
@@ -453,6 +440,8 @@ html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition:
   pointer-events: none;
 }
 .chapter__copy::before { opacity: var(--s, 0); }
+/* the halo's centre stays dark the whole time, so its text never fights the ring */
+.chapter--book .chapter__copy::before { opacity: 1; inset: -22% -26%; }
 html:not(.js) .chapter__copy::before { opacity: 1; }
 /* closest-side guarantees the glow reaches full transparency before every edge (no hard lines) */
 .hero__inner::before { inset: -22% -26% -24% -22%; background: radial-gradient(closest-side, rgba(7, 4, 11, 0.86), rgba(7, 4, 11, 0.66) 50%, rgba(7, 4, 11, 0)); }
@@ -502,13 +491,13 @@ html:not(.js) .chapter__copy::before { opacity: 1; }
 
 /* Scroll-linked reveals. --r goes 0 → 1 → 0 as the section plays. */
 html.js [data-reveal] {
-  opacity: var(--r, 0);
+  /* reaches full opacity early in its glide, so text is never left half-faded */
+  opacity: min(1, calc(var(--r, 0) * 1.8));
   transform: translate3d(0, calc((1 - var(--r, 0)) * 46px), 0);
-  filter: blur(calc((1 - var(--r, 0)) * 10px));
-  will-change: opacity, transform, filter;
+  will-change: opacity, transform;
 }
 /* Keyboard users never land on something invisible */
-html.js [data-reveal]:focus-within { opacity: 1; transform: none; filter: none; }
+html.js [data-reveal]:focus-within { opacity: 1; transform: none; }
 .hero__inner:focus-within { opacity: 1 !important; transform: none !important; }
 .stage:focus-within .chapter__copy::before { opacity: 1; }
 
@@ -524,8 +513,6 @@ html.js [data-reveal]:focus-within { opacity: 1; transform: none; filter: none; 
   padding: 11px 16px;
   border: 1px solid var(--line);
   background: var(--glass);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
   font-size: 14px;
 }
 .chips span { color: var(--muted); }
@@ -643,8 +630,6 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   border: 1px solid var(--line);
   border-radius: 24px;
   background: var(--glass);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 .menu__col h3 { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: clamp(1.8rem, 2.2vw, 2.4rem); margin-bottom: 18px; }
 .menu__col dl > div {
@@ -784,7 +769,7 @@ html.is-paused *, html.is-paused *::before, html.is-paused *::after { animation-
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-  html.js [data-reveal] { transform: none; filter: none; }
+  html.js [data-reveal] { transform: none; }
   .hero__inner { transform: none; }
   .chapter__num { transform: none; }
 }

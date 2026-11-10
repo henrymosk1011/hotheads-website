@@ -58,9 +58,9 @@ const KEYS = [
   // 06 · Menu
   { t: 6.0, lock: [-8.6, 0.2, -3.0], rot: [0, 0.3, -0.12], curl: 0.35, op: 0.26, glow: [0.22, 0.05, 0.22] },
   // 07 · Book — the lock becomes a halo
-  { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.3,
+  { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.26,
     glow: [0.36, 0.06, 0.4], bloom: 1.0, sparks: 0 },
-  { t: 7.32, ring: 1, ringR: 3.35, op: 0.26, bloom: 0.9, sparks: 0.25, dust: 0.6 },
+  { t: 7.12, ring: 1, ringR: 3.35, op: 0.22, bloom: 0.9, sparks: 0.25, dust: 0.6 },
   { t: 7.52, cam: [0, 0.0, 10.0], look: [0, 0, 0], ring: 1 },
   // 08 · Visit — the halo scrolls away with its section so the footer reads cleanly
   { t: 8.0, cam: [0, -6.6, 10.0], look: [0, -6.6, 0], op: 0.22, bloom: 0.8, glow: [0.16, 0.04, 0.26] },
@@ -270,7 +270,11 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = 0.95;
 
-  let dpr = Math.min(window.devicePixelRatio || 1, isSmall ? 1.5 : 1.75);
+  // Resolution budget: large/retina windows get a slightly lower internal
+  // resolution (bloom + grain hide it) so the GPU keeps a steady frame rate.
+  const cssPixels = window.innerWidth * window.innerHeight;
+  const maxDpr = isSmall ? 1.5 : (cssPixels > 2.0e6 ? 1.25 : 1.5);
+  let dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   renderer.setPixelRatio(dpr);
 
   const scene = new THREE.Scene();
@@ -312,10 +316,13 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
 
   // Hair
   const hair = createHair({
-    strands: isSmall ? 1500 : 2800,
-    segments: isSmall ? 40 : 56,
+    strands: isSmall ? 1400 : 2400,
+    segments: isSmall ? 36 : 48,
     length: 10,
   });
+  // Fewer strands are drawn a touch brighter so the lock keeps its density
+  const refStrands = isSmall ? 1500 : 2800;
+  let density = Math.min(1.6, refStrands / hair.strands);
   const lock = new THREE.Group();
   lock.add(hair.mesh);
   scene.add(lock);
@@ -355,18 +362,20 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   placeholder.needsUpdate = true;
   const gallery = createGallery(SALON_PHOTOS.map(() => placeholder), { radius: isSmall ? 4.4 : 5.0, height: 1.6 });
   scene.add(gallery.group);
-  const texturesReady = Promise.all(SALON_PHOTOS.map((name, i) => new Promise((resolve) => {
+  // Photos stream in on their own; nothing waits for them. Each one is pushed
+  // to the GPU as it arrives so the gallery never stalls on first sight.
+  SALON_PHOTOS.forEach((name, i) => {
     loader.load(`${basePath}img/salon/${name}.webp`, (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.anisotropy = 4;
       gallery.setTextureImage(i, tex);
-      resolve();
-    }, undefined, () => resolve());
-  })));
+      renderer.initTexture(tex);
+    });
+  });
 
   // Post-processing
   const size = new THREE.Vector2();
-  const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: isSmall ? 2 : 4 });
+  const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: isSmall || dpr > 1.25 ? 2 : 4 });
   const composer = new EffectComposer(renderer, rt);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.6, 0.6, 0.8);
@@ -385,6 +394,8 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   const pointerSmooth = new THREE.Vector2();
   let galleryRot = 0;
   let lastGalleryRot = 0;
+  let galleryVel = 0;
+  let scrollSpeed = 0;
   let strandCount = hair.strands;
 
   function resize() {
@@ -443,18 +454,20 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     lock.rotation.set(k.rot[0], k.rot[1], k.rot[2]);
     lock.updateMatrixWorld();
 
-    const speed = Math.min(Math.abs(velocity), 4);
+    // eased scroll speed: drives a gentle wind gust, never a jitter
+    scrollSpeed += (Math.min(Math.abs(velocity), 3) - scrollSpeed) * (1 - Math.exp(-dt * 3));
+    const speed = scrollSpeed;
     u.uTime.value = t;
     u.uLen.value = k.len;
     u.uSpread.value = k.spread;
     u.uWave.value = k.wave;
-    u.uWind.value = k.wind + speed * 0.35;
+    u.uWind.value = k.wind + speed * 0.2;
     u.uTwist.value = k.twist;
     u.uCurl.value = clamp01(k.curl);
     u.uClump.value = clamp01(k.clump);
     u.uRing.value = clamp01(k.ring);
     u.uRingR.value = k.ringR;
-    u.uOpacity.value = k.op * OPACITY_SCALE;
+    u.uOpacity.value = k.op * OPACITY_SCALE * density;
     u.uExposure.value = k.exp;
 
     /* 01 · The snip ------------------------------------------------ */
@@ -520,9 +533,10 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     galleryRot = 0.6 + (T - 4) * 2.4;
     const gVel = (galleryRot - lastGalleryRot) / Math.max(dt, 1 / 240);
     lastGalleryRot = galleryRot;
+    galleryVel += (gVel - galleryVel) * (1 - Math.exp(-dt * 4));
     gallery.group.rotation.set(0.12, galleryRot + t * 0.04, 0.03);
     gallery.group.scale.setScalar(lerp(0.85, 1, gv));
-    gallery.uniforms.uVel.value = THREE.MathUtils.clamp(gVel * 0.25, -1.5, 1.5) * gv;
+    gallery.uniforms.uVel.value = THREE.MathUtils.clamp(galleryVel * 0.2, -1.2, 1.2) * gv;
 
     /* Particles & light --------------------------------------------- */
     const visLen = k.len * (cutOn ? 0.56 : 1) * (1 - 0.3 * u.uCurl.value);
@@ -540,42 +554,62 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     bgMat.uniforms.uTime.value = t;
     bloom.strength = k.bloom * BLOOM_SCALE;
     finish.uniforms.uTime.value = time;
-    finish.uniforms.uAberration.value = Math.min(0.012, speed * 0.004);
+    finish.uniforms.uAberration.value = Math.min(0.006, speed * 0.0025);
   }
 
   function render() {
     composer.render();
   }
 
-  // Adaptive quality: step down if the GPU is struggling
+  // Adaptive quality, measured against this display's own refresh rate:
+  // if frames run noticeably slower than the screen, step down gently.
   let frames = 0;
   let acc = 0;
-  let level = 0;
+  let warm = 0;
+  let minDt = Infinity;
   function reportFrame(ms) {
-    if (capture || level >= 3) return;
+    if (capture) return;
+    if (warm < 90) { warm++; return; } // ignore start-up work
+    minDt = Math.min(minDt, Math.max(ms, 4));
     frames++;
     acc += ms;
-    if (frames < 90) return;
+    if (frames < 60) return;
     const avg = acc / frames;
     frames = 0;
     acc = 0;
-    if (avg < 26) return;
-    level++;
-    if (level === 1 && dpr > 1) {
-      dpr = Math.max(1, dpr - 0.5);
+    if (avg <= Math.max(minDt * 1.2, 11)) return;
+    if (dpr > 1) {
+      dpr = Math.max(1, Math.round((dpr - 0.25) * 100) / 100);
       renderer.setPixelRatio(dpr);
       resize();
-    } else if (level <= 2) {
-      strandCount = Math.round(strandCount * 0.6);
+    } else if (strandCount > 1100) {
+      strandCount = Math.round(strandCount * 0.75);
       hair.setStrandCount(strandCount);
-    } else {
+      density = Math.min(1.6, refStrands / strandCount);
+    } else if (bloom.enabled) {
       bloom.enabled = false;
     }
   }
 
+  // Compile every shader up front, including objects that start hidden
+  // (shears, dye drops, photo ring), so nothing stalls mid-scroll. Uses the
+  // browser's parallel compile when available, off the main thread.
+  async function warmUp() {
+    const hidden = [scissors.group, gallery.group, ...drops].filter((o) => !o.visible);
+    hidden.forEach((o) => { o.visible = true; });
+    try {
+      const parallel = renderer.extensions.has('KHR_parallel_shader_compile');
+      if (parallel && renderer.compileAsync) await renderer.compileAsync(scene, camera);
+      else renderer.compile(scene, camera); // still up front, while the canvas is hidden
+    } catch (err) {
+      console.warn('shader warm-up skipped:', err);
+    }
+    hidden.forEach((o) => { o.visible = false; });
+  }
+
   return {
     renderer,
-    ready: texturesReady,
+    ready: warmUp(),
     resize,
     update,
     render,
