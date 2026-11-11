@@ -56,6 +56,7 @@
 html {
   background: var(--bg);
   color: var(--ink);
+  overflow-x: clip;
   scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -108,9 +109,11 @@ address { font-style: normal; }
 /* ---------- Canvas ---------- */
 #gl {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100lvh;
   display: block;
   z-index: 0;
   pointer-events: none;
@@ -128,6 +131,14 @@ html.no-webgl body {
 }
 
 main, .nav, .rail, .visit { position: relative; z-index: 2; }
+
+/* Every section clips sideways overflow, so a phone can never be zoomed or
+   dragged wider than the screen. (clip, unlike hidden, keeps sticky working.) */
+.hero, .chapter, .block, .visit { overflow-x: clip; }
+
+/* Phone legibility veils: fixed to the screen so they never slide with a
+   section; JS fades them in and out. Desktop uses per-section scrims. */
+.veil { display: none; }
 
 /* ---------- Type helpers ---------- */
 .eyebrow {
@@ -418,6 +429,7 @@ html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition:
 /* ---------- Chapters (sticky stages) ---------- */
 .chapter { position: relative; height: 270vh; }
 .chapter--book { height: 210vh; }
+@media (max-width: 720px) { .chapter.chapter--book { height: 240vh; } }
 .stage {
   position: sticky;
   top: 0;
@@ -438,9 +450,9 @@ html.is-loaded .hero__foot { opacity: calc(1 - var(--hero, 0) * 24); transition:
   background: radial-gradient(closest-side, rgba(7, 4, 11, 0.86), rgba(7, 4, 11, 0.72) 55%, rgba(7, 4, 11, 0));
   pointer-events: none;
 }
-.chapter__copy::before { opacity: var(--s, 0); }
+.chapter__copy::before { opacity: clamp(0, calc((var(--s, 0) - 0.02) * 17), 1); transition: opacity 0.35s var(--ease); } /* on just before its text */
 /* the halo's centre stays dark the whole time, so its text never fights the ring */
-.chapter--book .chapter__copy::before { opacity: 1; inset: -22% -26%; }
+.chapter--book .chapter__copy::before { opacity: 1; inset: -26% -30%; background: radial-gradient(closest-side, rgba(7, 4, 11, 0.9), rgba(7, 4, 11, 0.8) 55%, rgba(7, 4, 11, 0)); }
 .gallery__intro::before { opacity: 1; }
 html:not(.js) .chapter__copy::before { opacity: 1; }
 /* closest-side guarantees the glow reaches full transparency before every edge (no hard lines) */
@@ -491,8 +503,10 @@ html:not(.js) .chapter__copy::before { opacity: 1; }
 
 /* Scroll-linked reveals. --r goes 0 → 1 → 0 as the section plays. */
 html.js [data-reveal] {
-  /* reaches full opacity early in its glide, so text is never left half-faded */
-  opacity: min(1, calc(var(--r, 0) * 1.8));
+  /* Text is either on or off: it switches on early in its glide, and the switch
+     is a short timed fade, so it can never rest half-transparent mid-scroll. */
+  opacity: clamp(0, calc((var(--r, 0) - 0.1) * 1000), 1);
+  transition: opacity 0.35s var(--ease);
   transform: translate3d(0, calc((1 - var(--r, 0)) * 46px), 0);
   will-change: opacity, transform;
 }
@@ -570,17 +584,26 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
 .card__photo { aspect-ratio: 4 / 5; overflow: hidden; }
 .card__photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 1.2s var(--ease), filter 1.2s var(--ease); filter: saturate(0.9) contrast(1.02); }
 .card:hover .card__photo img { transform: scale(1.1); filter: saturate(1.05); }
+.card { display: flex; flex-direction: column; }
 .card__body {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  display: grid;
-  gap: 6px;
-  padding: 80px 22px 20px;
-  background: linear-gradient(180deg, rgba(7, 4, 11, 0) 0%, rgba(7, 4, 11, 0.78) 45%, rgba(7, 4, 11, 0.94) 100%);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
+  padding: 20px 22px 22px;
 }
 .card h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(2rem, 2.6vw, 2.8rem); line-height: 1; }
-.card p { font-size: 14px; color: var(--muted); }
-.card__actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
+.card__services { display: grid; gap: 4px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.card__services li { display: flex; align-items: baseline; gap: 10px; }
+.card__services li::before {
+  content: "";
+  flex: none;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--hot);
+  transform: translateY(-2px);
+}
+.card__actions { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 6px; font-size: 13px; }
 .card__actions a {
   padding: 8px 14px;
   border-radius: 999px;
@@ -751,10 +774,30 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   .hero__title { font-size: 14.2vw; }
   .hero { padding-top: 96px; }
   .hero__foot .hero__meta { display: none; }
-  .chapter { height: 240vh; }
+  .chapter { height: 280vh; }
   .stage { align-items: end; padding-bottom: 36px; }
   .chapter--right .chapter__copy, .chapter--left .chapter__copy { justify-self: stretch; }
-  .chapter--left .stage, .chapter--right .stage { background: linear-gradient(0deg, rgba(7, 4, 11, 0.94) 0%, rgba(7, 4, 11, 0.82) 48%, rgba(7, 4, 11, 0) 76%); }
+  /* no backgrounds that travel with sections: the fixed veils do this job */
+  .block, .visit { background: none; }
+  .veil {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100lvh;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s var(--ease);
+    will-change: opacity;
+  }
+  .veil--text { background: linear-gradient(0deg, rgba(7, 4, 11, 0.94) 0%, rgba(7, 4, 11, 0.84) 46%, rgba(7, 4, 11, 0) 78%); }
+  .veil--page { background: rgba(7, 4, 11, 0.8); }
+  /* keep every glow inside the screen width */
+  .hero__inner::before { inset: -10% 0 -12% 0; }
+  .chapter__copy::before { inset: -14% 0; }
+  .chapter--book .chapter__copy::before { inset: -26% 0; }
   .chapter--center .stage { padding-top: 14vh; }
   .chapter__num { font-size: 52vw; top: 12vh; bottom: auto; }
   .stage__caption { left: auto; right: var(--gutter); top: 22%; }

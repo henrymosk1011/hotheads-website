@@ -43,8 +43,21 @@ applyMotion();
 /* ------------------------------------------------------------------ */
 /* Smooth scroll                                                       */
 /* ------------------------------------------------------------------ */
+// On phones Lenis also smooths touch scrolling (calmer momentum, so a flick
+// doesn't blow through a whole chapter). Two-finger gestures are pinch-zoom
+// and are always left to the browser.
+const touchDevice = matchMedia('(pointer: coarse)').matches;
 const lenis = !reducedMotion && !capture
-  ? new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true })
+  ? new Lenis({
+    lerp: 0.1,
+    wheelMultiplier: 1,
+    smoothWheel: true,
+    syncTouch: touchDevice,
+    syncTouchLerp: 0.08,
+    touchMultiplier: 1, // content tracks the finger 1:1
+    touchInertiaExponent: 1.55, // a little less fling than native, so chapters don't fly by
+    virtualScroll: (e) => !(e.event && e.event.touches && e.event.touches.length > 1),
+  })
   : null;
 
 const scrollY = () => (lenis ? lenis.scroll : window.scrollY);
@@ -115,6 +128,8 @@ const chapters = [...document.querySelectorAll('.chapter')].map((el) => ({
   top: 0,
   height: 0,
   lastP: -1,
+  strongest: 0,
+  side: el.classList.contains('chapter--left') || el.classList.contains('chapter--right'),
 }));
 const galleryData = chapters.find((c) => c.el.classList.contains('chapter--gallery'));
 const hero = document.querySelector('.hero');
@@ -140,7 +155,8 @@ function measureGallery() {
   // travel until the last photo sits in the middle of the screen
   galleryTravel = Math.max(0, lastCenter - galleryStageW / 2);
   // roughly one pixel of scroll per pixel of sideways travel, plus a short dwell
-  galleryChapter.style.height = `${Math.round(galleryTravel + vh * 1.5)}px`;
+  const ratio = matchMedia('(max-width: 720px)').matches ? 1.4 : 1;
+  galleryChapter.style.height = `${Math.round(galleryTravel * ratio + vh * 1.5)}px`;
   lastGX = null;
 }
 
@@ -164,14 +180,26 @@ function updateGallery(y) {
 
 let anchors = [];
 let maxScroll = 1;
-let vh = window.innerHeight;
+// Layout-viewport size: unlike innerWidth/innerHeight it doesn't change while
+// a phone is pinch-zoomed or its toolbar slides, so zooming can't break layout.
+const viewW = () => document.documentElement.clientWidth;
+const viewH = () => document.documentElement.clientHeight;
+let vh = viewH();
+
+/* Phone veils: fixed to the screen, faded by scroll position */
+const veilText = document.querySelector('.veil--text');
+const veilPage = document.querySelector('.veil--page');
+const pageSections = ['stylists', 'menu', 'visit'].map((id) => document.getElementById(id)).filter(Boolean);
+let pageRanges = [];
+let lastVeilT = -1;
+let lastVeilP = -1;
 
 function absTop(el) {
   return el.getBoundingClientRect().top + window.scrollY;
 }
 
 function measure() {
-  vh = window.innerHeight;
+  vh = viewH();
   measureGallery();
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
   anchors = scenes.map((el) => Math.min(absTop(el), maxScroll));
@@ -180,6 +208,7 @@ function measure() {
     c.height = c.el.offsetHeight;
     c.lastP = -1;
   }
+  pageRanges = pageSections.map((el) => { const top = absTop(el); return { top, bottom: top + el.offsetHeight }; });
 }
 
 function filmPosition(y) {
@@ -214,6 +243,7 @@ function updateDom(y, T, time, velocity) {
       if (c.lastP !== -9) {
         c.items.forEach((it) => { it.n.style.setProperty('--r', '0'); it.last = 0; });
         c.el.style.setProperty('--s', '0');
+        c.strongest = 0;
         c.lastP = -9;
       }
       continue;
@@ -234,6 +264,19 @@ function updateDom(y, T, time, velocity) {
       }
     }
     c.el.style.setProperty('--s', String(strongest));
+    c.strongest = strongest;
+  }
+
+  // phone veils (hidden by CSS on larger screens)
+  if (veilText) {
+    let vt = 0;
+    for (const c of chapters) if (c.side) vt = Math.max(vt, clamp01(((c.strongest || 0) - 0.02) * 17)); // on just before its text
+    let vp = 0;
+    for (const r of pageRanges) vp += Math.max(0, Math.min(y + vh, r.bottom) - Math.max(y, r.top)) / vh;
+    vt = Math.round(vt * 100) / 100;
+    vp = Math.round(Math.min(1, vp) * 100) / 100;
+    if (vt !== lastVeilT) { veilText.style.opacity = String(vt); lastVeilT = vt; }
+    if (vp !== lastVeilP) { veilPage.style.opacity = String(vp); lastVeilP = vp; }
   }
 
   const active = T < 0.6 ? 0 : Math.floor(T + 0.4);
@@ -357,7 +400,14 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+let lastW = viewW();
+let lastH = viewH();
 window.addEventListener('resize', () => {
+  const w = viewW();
+  const h = viewH();
+  if (w === lastW && h === lastH) return; // pinch-zoom or toolbar: the layout didn't change
+  lastW = w;
+  lastH = h;
   measure();
   world?.resize();
 });
@@ -365,7 +415,7 @@ window.addEventListener('load', measure);
 
 window.addEventListener('pointermove', (e) => {
   if (!world || e.pointerType === 'touch' || paused) return;
-  world.setPointer((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
+  world.setPointer((e.clientX / viewW()) * 2 - 1, -((e.clientY / viewH()) * 2 - 1));
 }, { passive: true });
 
 /* Deterministic hook used to render the preview video frame by frame */

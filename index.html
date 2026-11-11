@@ -133,6 +133,8 @@
 
   <!-- The 3D film. Decorative: every word on the page is real HTML. -->
   <canvas id="gl" aria-hidden="true" tabindex="-1"></canvas>
+  <div class="veil veil--text" aria-hidden="true"></div>
+  <div class="veil veil--page" aria-hidden="true"></div>
 
   <div class="loader" aria-hidden="true">
     <img class="loader__logo" src="/assets/img/hotheads-logo-white.png" alt="" width="1158" height="298">
@@ -339,12 +341,12 @@
         <h2 class="block__title" id="stylists-title">Meet the <em class="hot">hot heads.</em></h2>
         <p class="block__lede">Every stylist keeps their own book. Call or text them directly to grab a chair.</p>
       </div>
-      <ul class="team">
+      <ul class="team" data-lenis-prevent-horizontal>
         <li class="card" data-inview>
           <figure class="card__photo"><img src="/assets/img/stylists/stephanie.webp" alt="Stephanie, a hair stylist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Stephanie</h3>
-            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <ul class="card__services" aria-label="Stephanie's services"><li>Cut &amp; color specialist</li><li>Men</li><li>Women</li></ul>
             <div class="card__actions"><a href="tel:+18184287699" aria-label="Call Stephanie at (818) 428-7699">Call</a><a href="sms:+18184287699" aria-label="Text Stephanie at (818) 428-7699">Text</a><span>(818) 428-7699</span></div>
           </div>
         </li>
@@ -352,7 +354,7 @@
           <figure class="card__photo"><img src="/assets/img/stylists/erika.webp" alt="Erika, a hair stylist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Erika</h3>
-            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <ul class="card__services" aria-label="Erika's services"><li>Cut &amp; color specialist</li><li>Men</li><li>Women</li></ul>
             <div class="card__actions"><a href="tel:+13108766335" aria-label="Call Erika at (310) 876-6335">Call</a><a href="sms:+13108766335" aria-label="Text Erika at (310) 876-6335">Text</a><span>(310) 876-6335</span></div>
           </div>
         </li>
@@ -360,7 +362,7 @@
           <figure class="card__photo"><img src="/assets/img/stylists/carla.webp" alt="Carla, a hair stylist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Carla</h3>
-            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <ul class="card__services" aria-label="Carla's services"><li>Cut &amp; color specialist</li><li>Men</li><li>Women</li></ul>
             <div class="card__actions"><a href="tel:+16266161406" aria-label="Call Carla at (626) 616-1406">Call</a><a href="sms:+16266161406" aria-label="Text Carla at (626) 616-1406">Text</a><span>(626) 616-1406</span></div>
           </div>
         </li>
@@ -368,7 +370,7 @@
           <figure class="card__photo"><img src="/assets/img/stylists/maral.webp" alt="Maral, a hair stylist and threading specialist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Maral</h3>
-            <p>Cut &amp; color · Eyebrow &amp; upper-lip threading</p>
+            <ul class="card__services" aria-label="Maral's services"><li>Cut &amp; color specialist</li><li>Men</li><li>Women</li><li>Eyebrow threading</li><li>Upper lip threading</li></ul>
             <div class="card__actions"><a href="tel:+16262218492" aria-label="Call Maral at (626) 221-8492">Call</a><a href="sms:+16262218492" aria-label="Text Maral at (626) 221-8492">Text</a><span>(626) 221-8492</span></div>
           </div>
         </li>
@@ -376,7 +378,7 @@
           <figure class="card__photo"><img src="/assets/img/stylists/jazmine.webp" alt="Jazmine, a hair stylist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Jazmine</h3>
-            <p>Cut &amp; color specialist · Men &amp; women</p>
+            <ul class="card__services" aria-label="Jazmine's services"><li>Cut &amp; color specialist</li><li>Men</li><li>Women</li></ul>
             <div class="card__actions"><a href="tel:+16262215943" aria-label="Call Jazmine at (626) 221-5943">Call</a><a href="sms:+16262215943" aria-label="Text Jazmine at (626) 221-5943">Text</a><span>(626) 221-5943</span></div>
           </div>
         </li>
@@ -384,7 +386,7 @@
           <figure class="card__photo"><img src="/assets/img/stylists/taleen.webp" alt="Taleen, a Brazilian Blowout and blow-dry specialist at Hotheads Salon in Pasadena" width="720" height="900" loading="lazy" decoding="async"></figure>
           <div class="card__body">
             <h3>Taleen</h3>
-            <p>Brazilian Blowouts &amp; blow-drys · Sundays</p>
+            <ul class="card__services" aria-label="Taleen's services"><li>Brazilian Blowouts (Sundays)</li><li>Blow-drys (Sundays)</li><li>Men</li><li>Women</li></ul>
             <div class="card__actions"><a href="tel:+16269934836" aria-label="Call Taleen at (626) 993-4836">Call</a><a href="sms:+16269934836" aria-label="Text Taleen at (626) 993-4836">Text</a><span>(626) 993-4836</span></div>
           </div>
         </li>

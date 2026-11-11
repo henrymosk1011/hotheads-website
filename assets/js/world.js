@@ -250,7 +250,9 @@ function createStudio() {
 }
 
 export async function createWorld(canvas, { capture = false, reducedMotion = false } = {}) {
-  const isSmall = Math.min(window.innerWidth, window.innerHeight) < 700 || matchMedia('(pointer: coarse)').matches;
+  const vw0 = document.documentElement.clientWidth;
+  const vh0 = document.documentElement.clientHeight;
+  const isSmall = Math.min(vw0, vh0) < 700 || matchMedia('(pointer: coarse)').matches;
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -266,7 +268,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
 
   // Resolution budget: large/retina windows get a slightly lower internal
   // resolution (bloom + grain hide it) so the GPU keeps a steady frame rate.
-  const cssPixels = window.innerWidth * window.innerHeight;
+  const cssPixels = vw0 * vh0;
   const maxDpr = isSmall ? 1.5 : (cssPixels > 2.0e6 ? 1.25 : 1.5);
   let dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   renderer.setPixelRatio(dpr);
@@ -374,8 +376,9 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   let strandCount = hair.strands;
 
   function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    // size from the canvas's own box (fixed, 100lvh): pinch-zoom never changes it
+    const w = canvas.clientWidth || document.documentElement.clientWidth;
+    const h = canvas.clientHeight || document.documentElement.clientHeight;
     renderer.setSize(w, h, false);
     composer.setPixelRatio(renderer.getPixelRatio());
     composer.setSize(w, h);
