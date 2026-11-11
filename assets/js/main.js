@@ -47,6 +47,9 @@ applyMotion();
 // browser's own scrolling: it handles momentum, axis locking (the stylist
 // carousel), pinch-zoom and the address bar far better than any script can.
 const touchDevice = matchMedia('(pointer: coarse)').matches;
+// Touch screens get a plain, naturally scrolling page with no pinned sections
+// (see the "(pointer: coarse)" block in style.css): iOS Safari jitters them.
+const flowMode = touchDevice;
 const lenis = !reducedMotion && !capture && !touchDevice
   ? new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true })
   : null;
@@ -139,6 +142,7 @@ let lastGX = null;
 
 function measureGallery() {
   if (!galleryTrack) return;
+  if (flowMode) { galleryChapter.style.height = ''; return; } // a plain vertical stack
   galleryTrack.style.transform = 'none';
   galleryStageW = galleryStage.clientWidth;
   shotItems = [...galleryTrack.querySelectorAll('.shot')].map((el) => ({ el, center: el.offsetLeft + el.offsetWidth / 2 }));
@@ -153,7 +157,7 @@ function measureGallery() {
 
 function updateGallery(y) {
   const c = galleryData;
-  if (!galleryTrack || !c) return;
+  if (!galleryTrack || !c || flowMode) return;
   const span = Math.max(1, c.height - vh);
   const p = (y - c.top) / span;
   if (p < -0.5 || p > 1.5) return;
@@ -228,6 +232,7 @@ function updateDom(y, T, time, velocity) {
   root.classList.toggle('show-rail', T > 0.75 && T < 3.9); // hidden once the photo gallery starts
 
   for (const c of chapters) {
+    if (flowMode) break; // touch screens reveal text on entry instead (see below)
     const span = Math.max(1, c.height - vh);
     const p = (y - c.top) / span;
     if (p < -0.6 || p > 1.6) {
@@ -261,7 +266,7 @@ function updateDom(y, T, time, velocity) {
   // phone veils (hidden by CSS on larger screens)
   if (veilText) {
     let vt = 0;
-    for (const c of chapters) if (c.side) vt = Math.max(vt, clamp01(((c.strongest || 0) - 0.02) * 17)); // on just before its text
+    if (!flowMode) for (const c of chapters) if (c.side) vt = Math.max(vt, clamp01(((c.strongest || 0) - 0.02) * 17)); // on just before its text
     let vp = 0;
     for (const r of pageRanges) vp += Math.max(0, Math.min(y + vh, r.bottom) - Math.max(y, r.top)) / vh;
     vt = Math.round(vt * 100) / 100;
@@ -294,10 +299,11 @@ const io = new IntersectionObserver((entries) => {
     }
   }
 }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
-document.querySelectorAll('[data-inview]').forEach((el) => io.observe(el));
+const revealSelector = flowMode ? '[data-inview], [data-reveal]' : '[data-inview]';
+document.querySelectorAll(revealSelector).forEach((el) => io.observe(el));
 // anything that receives keyboard focus is revealed immediately
 document.addEventListener('focusin', (e) => {
-  const el = e.target.closest?.('[data-inview]');
+  const el = e.target.closest?.(revealSelector);
   if (el) el.classList.add('is-in');
 });
 
@@ -373,7 +379,15 @@ async function boot() {
 // for drawing the zoomed page.
 let zoomed = false;
 if (window.visualViewport) {
-  visualViewport.addEventListener('resize', () => { zoomed = visualViewport.scale > 1.05; });
+  const onZoom = () => {
+    const z = visualViewport.scale > 1.01;
+    if (z !== zoomed) {
+      zoomed = z;
+      root.classList.toggle('is-zoomed', z); // CSS takes the canvas off screen
+    }
+  };
+  visualViewport.addEventListener('resize', onZoom);
+  visualViewport.addEventListener('scroll', onZoom);
 }
 
 function frame(now) {
@@ -421,7 +435,7 @@ window.addEventListener('pointermove', (e) => {
 /* Deterministic hook used to render the preview video frame by frame */
 function exposeCapture() {
   let cPrevT = null;
-  document.querySelectorAll('[data-inview]').forEach((el) => el.classList.add('is-in'));
+  document.querySelectorAll(revealSelector).forEach((el) => el.classList.add('is-in'));
   window.__HH = {
     maxScroll: () => maxScroll,
     anchors: () => anchors.slice(),

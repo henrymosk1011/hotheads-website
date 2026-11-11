@@ -809,18 +809,16 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   .gallery__track { padding-right: 8vw; }
   .shot { --max-h: 58vh; --max-w: 84vw; }
   .chips b { font-size: 18px; }
-  .team {
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    margin: 0 calc(var(--gutter) * -1);
-    padding: 0 var(--gutter) 8px;
-    scrollbar-width: none;
-  }
-  .team::-webkit-scrollbar { display: none; }
-  .team { overscroll-behavior-x: contain; }
-  .team .card { flex: 0 0 78%; scroll-snap-align: center; }
+  /* stylists: a two-column grid, no sideways scrolling */
+  .team { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { border-radius: 18px; }
+  .card__body { padding: 14px 14px 16px; gap: 10px; }
+  .card h3 { font-size: 1.7rem; }
+  .card__services { font-size: 13px; gap: 3px; }
+  .card__services li { gap: 8px; }
+  .card__actions { flex-wrap: wrap; gap: 6px; }
+  .card__actions a { padding: 8px 12px; }
+  .card__actions span { flex-basis: 100%; margin-left: 0; font-size: 12px; }
   .visit__grid { grid-template-columns: 1fr; }
   .visit__base { flex-direction: column; }
 }
@@ -869,6 +867,53 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
 .motion-toggle[aria-pressed="true"] .motion-toggle__icon::after { display: none; }
 html:not(.js) .motion-toggle, html.no-webgl .motion-toggle { display: none; }
 html.is-paused *, html.is-paused *::before, html.is-paused *::after { animation-play-state: paused !important; }
+
+/* ==========================================================================
+   Touch screens: no pinned (sticky) sections at all. iOS Safari jitters and
+   shifts sticky elements while scrolling, so phones and tablets get a plain,
+   naturally scrolling page. The 3D film still plays behind it, driven by
+   scroll position, and each chapter's text sits in its own glass card.
+   ========================================================================== */
+@media (pointer: coarse) {
+  .chapter, .chapter.chapter--book, .chapter.chapter--gallery { height: auto; }
+  .stage {
+    position: relative;
+    height: auto;
+    min-height: 190svh;
+    overflow: visible;
+    align-content: center;
+    align-items: center;
+    padding: 0 var(--gutter);
+    background: none;
+  }
+  .chapter--book .stage { min-height: 170svh; padding-top: 0; }
+  .chapter--center .stage { padding-top: 0; align-items: center; }
+  .chapter__num, .stage__caption, .gallery__hint { display: none; }
+  .hero__inner { transform: none; }
+  .chapter__copy {
+    padding: 26px 22px;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(7, 4, 11, 0.86);
+  }
+  .chapter__copy::before { display: none; }
+  .veil--text { display: none; }
+  /* text eases in once as it scrolls into view (time-based, never scroll-scrubbed) */
+  html.js [data-reveal] { opacity: 0; transform: translate3d(0, 28px, 0); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+  html.js [data-reveal].is-in { opacity: 1; transform: none; }
+  /* salon photos: a simple vertical stack, every photo full width and uncropped */
+  .stage--gallery { display: block; min-height: 0; padding: 14svh 0 10svh; }
+  .gallery__track { display: block; width: auto; padding: 0 var(--gutter); transform: none !important; }
+  .gallery__intro { width: auto; max-width: 40rem; margin: 0 auto 34px; }
+  .shots { flex-direction: column; align-items: stretch; gap: 30px; max-width: 40rem; margin: 0 auto; }
+  .shot figure { transform: none; }
+  .shot figure::after { display: none; }
+  .shot img { width: 100%; height: auto; }
+}
+
+/* While pinch-zoomed the 3D is taken off screen completely (iOS Safari can run
+   out of memory zooming over a live WebGL canvas). */
+html.is-zoomed #gl, html.is-zoomed .veil { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
