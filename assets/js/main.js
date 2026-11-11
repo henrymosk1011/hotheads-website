@@ -43,21 +43,12 @@ applyMotion();
 /* ------------------------------------------------------------------ */
 /* Smooth scroll                                                       */
 /* ------------------------------------------------------------------ */
-// On phones Lenis also smooths touch scrolling (calmer momentum, so a flick
-// doesn't blow through a whole chapter). Two-finger gestures are pinch-zoom
-// and are always left to the browser.
+// Smooth scrolling for mouse wheels and trackpads only. Touch screens keep the
+// browser's own scrolling: it handles momentum, axis locking (the stylist
+// carousel), pinch-zoom and the address bar far better than any script can.
 const touchDevice = matchMedia('(pointer: coarse)').matches;
-const lenis = !reducedMotion && !capture
-  ? new Lenis({
-    lerp: 0.1,
-    wheelMultiplier: 1,
-    smoothWheel: true,
-    syncTouch: touchDevice,
-    syncTouchLerp: 0.08,
-    touchMultiplier: 1, // content tracks the finger 1:1
-    touchInertiaExponent: 1.55, // a little less fling than native, so chapters don't fly by
-    virtualScroll: (e) => !(e.event && e.event.touches && e.event.touches.length > 1),
-  })
+const lenis = !reducedMotion && !capture && !touchDevice
+  ? new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true })
   : null;
 
 const scrollY = () => (lenis ? lenis.scroll : window.scrollY);
@@ -155,7 +146,7 @@ function measureGallery() {
   // travel until the last photo sits in the middle of the screen
   galleryTravel = Math.max(0, lastCenter - galleryStageW / 2);
   // roughly one pixel of scroll per pixel of sideways travel, plus a short dwell
-  const ratio = matchMedia('(max-width: 720px)').matches ? 1.4 : 1;
+  const ratio = matchMedia('(max-width: 720px)').matches ? 1.7 : 1;
   galleryChapter.style.height = `${Math.round(galleryTravel * ratio + vh * 1.5)}px`;
   lastGX = null;
 }
@@ -378,6 +369,13 @@ async function boot() {
   }
 }
 
+// While pinch-zoomed, hold the 3D still: it saves the phone's memory and GPU
+// for drawing the zoomed page.
+let zoomed = false;
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', () => { zoomed = visualViewport.scale > 1.05; });
+}
+
 function frame(now) {
   const dt = Math.min(0.1, Math.max(0.001, (now - last) / 1000));
   last = now;
@@ -392,7 +390,7 @@ function frame(now) {
   prevT = T;
 
   updateDom(y, T, now / 1000, velocity);
-  if (world) {
+  if (world && !zoomed) {
     world.update(T, filmTime, { velocity: paused ? 0 : velocity, dt });
     world.render();
     if (!paused) world.reportFrame(dt * 1000);
@@ -405,7 +403,9 @@ let lastH = viewH();
 window.addEventListener('resize', () => {
   const w = viewW();
   const h = viewH();
-  if (w === lastW && h === lastH) return; // pinch-zoom or toolbar: the layout didn't change
+  // Pinch-zoom changes neither. On touch screens, small height-only changes are
+  // the address bar or keyboard: re-measuring then would shift the page.
+  if (w === lastW && (h === lastH || (touchDevice && Math.abs(h - lastH) < 200))) return;
   lastW = w;
   lastH = h;
   measure();

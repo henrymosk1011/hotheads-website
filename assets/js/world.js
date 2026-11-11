@@ -269,7 +269,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   // Resolution budget: large/retina windows get a slightly lower internal
   // resolution (bloom + grain hide it) so the GPU keeps a steady frame rate.
   const cssPixels = vw0 * vh0;
-  const maxDpr = isSmall ? 1.5 : (cssPixels > 2.0e6 ? 1.25 : 1.5);
+  const maxDpr = isSmall ? 1.25 : (cssPixels > 2.0e6 ? 1.25 : 1.5);
   let dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   renderer.setPixelRatio(dpr);
 
@@ -312,8 +312,8 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
 
   // Hair
   const hair = createHair({
-    strands: isSmall ? 1400 : 2400,
-    segments: isSmall ? 36 : 48,
+    strands: isSmall ? 1200 : 2400,
+    segments: isSmall ? 32 : 48,
     length: 10,
   });
   // Fewer strands are drawn a touch brighter so the lock keeps its density
@@ -444,7 +444,8 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     u.uCurl.value = clamp01(k.curl);
     u.uClump.value = clamp01(k.clump);
     u.uRing.value = clamp01(k.ring);
-    u.uRingR.value = k.ringR;
+    // portrait screens: a wider ring keeps its sides off-screen, clear of the text
+    u.uRingR.value = k.ringR * (camera.aspect < 0.85 ? 1.28 : 1);
     u.uOpacity.value = k.op * OPACITY_SCALE * density;
     u.uExposure.value = k.exp;
 

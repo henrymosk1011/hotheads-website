@@ -57,6 +57,7 @@ html {
   background: var(--bg);
   color: var(--ink);
   overflow-x: clip;
+  overflow-anchor: none; /* never let the browser nudge the scroll position */
   scroll-padding-top: 96px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -354,7 +355,6 @@ html.show-rail .rail { opacity: 1; }
   width: fit-content;
   max-width: min(1400px, 100%);
   transform: translate3d(0, calc(var(--hero, 0) * -14vh), 0);
-  will-change: transform;
 }
 .pill {
   justify-self: start;
@@ -508,7 +508,6 @@ html.js [data-reveal] {
   opacity: clamp(0, calc((var(--r, 0) - 0.1) * 1000), 1);
   transition: opacity 0.35s var(--ease);
   transform: translate3d(0, calc((1 - var(--r, 0)) * 46px), 0);
-  will-change: opacity, transform;
 }
 /* Keyboard users never land on something invisible */
 html.js [data-reveal]:focus-within { opacity: 1; transform: none; }
@@ -616,6 +615,13 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
 .card__actions a:hover { background: rgba(255, 79, 163, 0.18); border-color: rgba(255, 79, 163, 0.6); }
 .card__actions span { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
 
+@media (hover: none) {
+  .team { perspective: none; }
+  .card { transform-style: flat; }
+  .card.is-in { transform: none; }
+  .card__photo img { transform: none; filter: none; }
+}
+
 /* Menu */
 .menu__grid {
   display: grid;
@@ -658,7 +664,6 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   gap: clamp(28px, 4vw, 72px);
   width: max-content;
   padding: 0 calc(50vw - 20rem) 0 var(--gutter);
-  will-change: transform;
 }
 .gallery__intro { flex: none; width: min(30rem, 84vw); }
 .gallery__hint {
@@ -683,7 +688,6 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   position: relative;
   transform: perspective(1600px) rotateY(calc(var(--d) * -24deg)) scale(calc(0.82 + var(--f) * 0.18));
   transform-origin: center;
-  will-change: transform;
 }
 /* photos out of focus sink back a little; the centred one is at full brightness */
 .shot figure::after {
@@ -774,7 +778,7 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
   .hero__title { font-size: 14.2vw; }
   .hero { padding-top: 96px; }
   .hero__foot .hero__meta { display: none; }
-  .chapter { height: 280vh; }
+  .chapter { height: 330vh; }
   .stage { align-items: end; padding-bottom: 36px; }
   .chapter--right .chapter__copy, .chapter--left .chapter__copy { justify-self: stretch; }
   /* no backgrounds that travel with sections: the fixed veils do this job */
@@ -790,7 +794,6 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.35s var(--ease);
-    will-change: opacity;
   }
   .veil--text { background: linear-gradient(0deg, rgba(7, 4, 11, 0.94) 0%, rgba(7, 4, 11, 0.84) 46%, rgba(7, 4, 11, 0) 78%); }
   .veil--page { background: rgba(7, 4, 11, 0.8); }
@@ -816,6 +819,7 @@ html.js [data-inview].is-in { opacity: 1; transform: none; }
     scrollbar-width: none;
   }
   .team::-webkit-scrollbar { display: none; }
+  .team { overscroll-behavior-x: contain; }
   .team .card { flex: 0 0 78%; scroll-snap-align: center; }
   .visit__grid { grid-template-columns: 1fr; }
   .visit__base { flex-direction: column; }
