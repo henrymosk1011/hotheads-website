@@ -57,9 +57,9 @@ const KEYS = [
   // 06 · Menu
   { t: 6.0, lock: [-8.6, 0.2, -3.0], rot: [0, 0.3, -0.12], curl: 0.35, op: 0.26, glow: [0.22, 0.05, 0.22] },
   // 07 · Book: the lock becomes a halo
-  { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.26,
+  { t: 7.0, cam: [0, 0.1, 10.4], look: [0, 0, 0], lock: [0, 0, 0], rot: [0, 0, 0], ring: 0, curl: 0.45, spread: 0.35, op: 0.3,
     glow: [0.36, 0.06, 0.4], bloom: 1.0, sparks: 0 },
-  { t: 7.12, ring: 1, ringR: 3.35, op: 0.22, bloom: 0.9, sparks: 0.25, dust: 0.6 },
+  { t: 7.12, ring: 1, ringR: 3.35, op: 0.34, bloom: 1.25, sparks: 0.35, dust: 0.65 },
   { t: 7.52, cam: [0, 0.0, 10.0], look: [0, 0, 0], ring: 1 },
   // 08 · Visit: the halo scrolls away with its section so the footer reads cleanly
   { t: 8.0, cam: [0, -6.6, 10.0], look: [0, -6.6, 0], op: 0.22, bloom: 0.8, glow: [0.16, 0.04, 0.26] },
