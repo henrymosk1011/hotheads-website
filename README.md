@@ -10,6 +10,27 @@ standalone static site you can preview, tweak and launch whenever you're ready.
 | --- | --- | --- |
 | ![Shears snipping the lock](docs/cut.jpg) | ![Balayage dye on the lock](docs/color.jpg) | ![Halo around the booking call-to-action](docs/halo.jpg) |
 
+## Version 2 (`/v2/`)
+
+A second concept lives in [`v2/`](v2/) and is served at `/v2`. It's a scroll film with editorial type:
+
+1. **The entry clip:** an 8-second AI video (Google Veo, made from a storefront still and the
+   salon's interior photo), cut into 94 frames per layout (`v2/assets/film/d` landscape,
+   `v2/assets/film/m` portrait). Scrolling scrubs through it: storefront, door, inside.
+2. **The walk-in:** from the clip's last frame, the camera keeps moving into the real salon. This is
+   the interior photo (`v2/assets/img/room.webp`) projected onto a 3D box room in WebGL, so nothing
+   in it is invented. The clip's last frame is an exact crop of that photo, so the hand-off is seamless.
+3. **The page:** the film shrinks into a card, then services (a swipeable card deck), stylists,
+   salon photos, booking and a giant wordmark footer slide up over it.
+
+Copy, prices and stylists are plain HTML in `v2/index.html`. The film code is in
+`v2/assets/js/film.js`, and the scroll timing is in `v2/assets/js/v2.js` (`measure()`).
+
+**Before launching V2:** the storefront in the clip comes from a Google Street View screenshot,
+which is fine for a concept but not for a live site. Re-shoot the storefront (a real photo or
+phone video), regenerate the clip, and re-cut the frames; put them in a new folder name so cached
+frames don't linger. Then move V2 to the site root and remove its `noindex` tag.
+
 ## The film
 
 The star of the site is a lock of hair: about 2,800 individually shaded strands rendered on the
