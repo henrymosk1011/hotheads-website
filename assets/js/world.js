@@ -4,7 +4,10 @@
  * top of the page to the number of scenes at the bottom; each integer is
  * the start of a section:
  *
- *   0 hero · 1 cut · 2 color · 3 style · 4 salon · 5 stylists · 6 menu · 7 book · 8 visit
+ *   0 welcome · 1 cut · 2 color · 3 style · 4 salon · 5 stylists · 6 menu · 7 book · 8 visit
+ *
+ * Before 0 the opening film (film.js) covers the screen. As it bleeds away the
+ * page passes "intro" (0 to 1): the lock grows out across the frame to meet it.
  *
  * Continuous values (camera, hair shape, light) come from keyframes with
  * monotone cubic interpolation, so motion never overshoots. One-off moments
@@ -405,8 +408,11 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
   /* ---------------------------------------------------------------- */
   /* Per-frame update                                                  */
   /* ---------------------------------------------------------------- */
-  function update(T, time, { velocity = 0, dt = 1 / 60 } = {}) {
+  function update(T, time, { velocity = 0, dt = 1 / 60, intro = 1 } = {}) {
     const k = timeline(T);
+    // The entrance: while the opening film bleeds away, the lock pours in from the corner
+    const arrive = reducedMotion ? 1 : clamp01(intro);
+    const grow = 0.3 + 0.7 * smooth(0, 1, arrive);
     const u = hair.uniforms;
     const timeScale = reducedMotion ? 0.35 : 1;
     const t = time * timeScale;
@@ -436,7 +442,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     scrollSpeed += (Math.min(Math.abs(velocity), 3) - scrollSpeed) * (1 - Math.exp(-dt * 3));
     const speed = scrollSpeed;
     u.uTime.value = t;
-    u.uLen.value = k.len;
+    u.uLen.value = k.len * grow;
     u.uSpread.value = k.spread;
     u.uWave.value = k.wave;
     u.uWind.value = k.wind + speed * 0.2;
@@ -446,7 +452,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     u.uRing.value = clamp01(k.ring);
     // portrait screens: a wider ring keeps its sides off-screen, clear of the text
     u.uRingR.value = k.ringR * (camera.aspect < 0.85 ? 1.28 : 1);
-    u.uOpacity.value = k.op * OPACITY_SCALE * density;
+    u.uOpacity.value = k.op * OPACITY_SCALE * density * smooth(0, 0.45, arrive);
     u.uExposure.value = k.exp;
 
     /* 01 · The snip ------------------------------------------------ */
@@ -506,7 +512,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
     u.uSheen.value = smooth(0.03, 0.12, cc) * (1 - smooth(0.42, 0.62, cc));
 
     /* Particles & light --------------------------------------------- */
-    const visLen = k.len * (cutOn ? 0.56 : 1) * (1 - 0.3 * u.uCurl.value);
+    const visLen = k.len * grow * (cutOn ? 0.56 : 1) * (1 - 0.3 * u.uCurl.value);
     v3.set(visLen * 0.55, 0, 0);
     lock.localToWorld(v3);
     sparks.uniforms.uOrigin.value.copy(v3).add(v3b.set(0, -0.6, 0));
@@ -519,7 +525,7 @@ export async function createWorld(canvas, { capture = false, reducedMotion = fal
 
     bgMat.uniforms.uGlow.value.setRGB(k.glow[0], k.glow[1], k.glow[2]);
     bgMat.uniforms.uTime.value = t;
-    bloom.strength = k.bloom * BLOOM_SCALE;
+    bloom.strength = k.bloom * BLOOM_SCALE * (1 + 0.5 * Math.sin(arrive * Math.PI)); // a soft swell as it arrives
     finish.uniforms.uTime.value = time;
     finish.uniforms.uAberration.value = Math.min(0.006, speed * 0.0025);
   }

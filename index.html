@@ -34,13 +34,14 @@
   <link rel="preload" href="/assets/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/img/film/poster-d.webp" as="image" media="(min-aspect-ratio: 1/1)">
+  <link rel="preload" href="/assets/img/film/poster-m.webp" as="image" media="(max-aspect-ratio: 1/1)">
   <link rel="stylesheet" href="/assets/css/style.css">
 
   <script type="importmap">{"imports":{"three":"/assets/vendor/three.module.min.js","three/addons/":"/assets/vendor/three-addons/","lenis":"/assets/vendor/lenis.min.mjs"}}</script>
   <link rel="modulepreload" href="/assets/js/main.js">
+  <link rel="modulepreload" href="/assets/js/film.js">
   <link rel="modulepreload" href="/assets/vendor/lenis.min.mjs">
-  <link rel="modulepreload" href="/assets/js/world.js">
-  <link rel="modulepreload" href="/assets/vendor/three.module.min.js">
   <script type="module" src="/assets/js/main.js"></script>
 
   <script type="application/ld+json">
@@ -131,10 +132,17 @@
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
-  <!-- The 3D film. Decorative: every word on the page is real HTML. -->
+  <!-- Two fixed layers, both decorative: every word on the page is real HTML.
+       1. the 3D hair world, and on top of it
+       2. the opening film (storefront, door, a walk into the salon) that bleeds away into it. -->
   <canvas id="gl" aria-hidden="true" tabindex="-1"></canvas>
   <div class="veil veil--text" aria-hidden="true"></div>
   <div class="veil veil--page" aria-hidden="true"></div>
+  <div class="film" aria-hidden="true">
+    <canvas class="film__canvas" tabindex="-1"></canvas>
+    <div class="film__shade"></div>
+  </div>
+  <div class="progress" aria-hidden="true"><i></i></div>
 
   <div class="loader" aria-hidden="true">
     <img class="loader__logo" src="/assets/img/hotheads-logo-white.png" alt="" width="1158" height="298">
@@ -188,27 +196,56 @@
 
   <main id="main" tabindex="-1">
 
-    <!-- 00 · HERO -->
-    <section class="hero" id="top" data-scene="hero" aria-labelledby="hero-title">
-      <div class="hero__inner">
-        <a class="pill" href="tel:+16269934836">
-          <b>New</b> Brazilian Blowouts &amp; blow-drys on Sundays. Call Taleen
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
-        </a>
-        <h1 class="hero__title" id="hero-title">
-          <span class="eyebrow hero__eyebrow">Hotheads hair salon · Pasadena, CA</span>
-          <span class="line"><span>This isn't your</span></span>
-          <span class="line"><span><em class="hot">typical</em> salon.</span></span>
-        </h1>
-        <p class="hero__lede">At Hotheads, we treat everyone like family. Our laid-back attitude is paired with years of styling experience, a combination that will leave you looking and feeling fantastic.</p>
-        <div class="hero__actions">
-          <a class="btn btn--hot" href="tel:+16262215943">Call to book <small>(626) 221-5943</small></a>
-          <a class="btn btn--ghost" href="#stylists">Meet the stylists</a>
+    <!-- THE OPENING FILM: storefront, through the door, into the salon.
+         Plain blocks of copy that scroll over the fixed film canvas. -->
+    <section class="reel" id="top" aria-labelledby="hero-title">
+      <div class="beat beat--hero">
+        <div class="beat__copy hero__inner">
+          <a class="pill" href="tel:+16269934836">
+            <b>New</b> Brazilian Blowouts &amp; blow-drys on Sundays. Call Taleen
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+          </a>
+          <h1 class="hero__title" id="hero-title">
+            <span class="eyebrow hero__eyebrow">Hotheads hair salon · Pasadena, CA</span>
+            <span class="line"><span>This isn't your</span></span>
+            <span class="line"><span><em class="hot">typical</em> salon.</span></span>
+          </h1>
+          <p class="hero__lede">Cuts, color, highlights and blow-drys on Colorado Boulevard in East Pasadena. Appointments only.</p>
+          <div class="hero__actions">
+            <a class="btn btn--hot" href="tel:+16262215943">Call to book <small>(626) 221-5943</small></a>
+            <a class="btn btn--ghost" href="#stylists">Meet the stylists</a>
+          </div>
+        </div>
+        <p class="cue" aria-hidden="true"><i></i>Scroll to step inside</p>
+      </div>
+
+      <div class="beat" data-beat="door">
+        <div class="beat__copy">
+          <p class="eyebrow">2513 E. Colorado Blvd</p>
+          <h2 class="chapter__title">Come on <em class="hot">in.</em></h2>
+          <p class="chapter__body">You'll find us on Colorado Boulevard in East Pasadena, open Sunday through Saturday, by appointment.</p>
         </div>
       </div>
-      <div class="hero__foot">
-        <span class="scroll-cue"><i aria-hidden="true"></i>Scroll to play</span>
-        <span class="hero__meta">Appointments only · 2513 E. Colorado Blvd</span>
+
+      <div class="beat beat--room" data-beat="room">
+        <div class="beat__copy">
+          <p class="eyebrow">The floor</p>
+          <h2 class="chapter__title">Laid-back attitude. <br><em class="hot">Serious skill.</em></h2>
+          <p class="chapter__body">Our laid-back attitude is paired with years of styling experience, a combination that will leave you looking and feeling fantastic.</p>
+        </div>
+      </div>
+
+      <!-- Here the room bleeds away and the hair film takes over (film position 0) -->
+      <div class="beat beat--home" id="welcome" data-beat="home" data-scene="welcome">
+        <div class="beat__copy">
+          <p class="eyebrow">Welcome</p>
+          <h2 class="chapter__title">Make yourself <em class="hot">at home.</em></h2>
+          <p class="chapter__body">At Hotheads, we treat everyone like family. Take a seat, tell us what you're after, and watch what happens next.</p>
+          <div class="actions">
+            <a class="btn btn--hot" href="tel:+16262215943">Call to book</a>
+            <a class="btn btn--ghost" href="#menu">See the menu</a>
+          </div>
+        </div>
       </div>
     </section>
 
