@@ -10,9 +10,23 @@ standalone static site you can preview, tweak and launch whenever you're ready.
 | --- | --- | --- | --- |
 | ![The salon dissolving into the hair film](docs/bleed.jpg) | ![Shears snipping the lock](docs/cut.jpg) | ![Balayage dye on the lock](docs/color.jpg) | ![Halo around the booking call-to-action](docs/halo.jpg) |
 
-## The film, in one take
+## Versions
 
-The page at `/` joins the two earlier concepts into a single piece.
+| Address | Version | What it is |
+| --- | --- | --- |
+| `/` and `/v3` | **V3** (current) | V1 and V2 joined into one film, at a slower pace |
+| [`/v2`](v2/) | V2 | The storefront film with an editorial page under it |
+| [`/v1`](v1/) | V1 | The hair film on its own |
+
+`/v3` is the site root under a second address (a rewrite in `vercel.json`, so it exists on
+Vercel but not on a plain local file server). V1 and V2 are kept for comparison, each
+self-contained and marked `noindex`. They share the fonts, photos, film frames and vendored
+libraries in `/assets`. Delete the `v1/` and `v2/` folders whenever you no longer need them;
+nothing at the site root depends on them.
+
+## V3: the film, in one take
+
+Version 3 joins the two earlier concepts into a single piece.
 
 **Act one: the arrival** (`assets/js/film.js`)
 
@@ -57,16 +71,6 @@ The storefront in the clip comes from a Google Street View screenshot, which is 
 but not for a live site. Re-shoot the storefront (a real photo or phone video), regenerate the
 clip, and re-cut the frames into a new folder name (so cached frames don't linger), then point
 `SETS` in `assets/js/film.js` at it and replace `assets/img/film/poster-*.webp`.
-
-### The earlier concepts
-
-Both originals are kept for comparison, each self-contained and marked `noindex`:
-
-- [`/v1`](v1/): the hair film on its own
-- [`/v2`](v2/): the storefront film with an editorial page under it
-
-They share the fonts, photos, film frames and vendored libraries in `/assets`. Delete the `v1/`
-and `v2/` folders whenever you no longer need them; nothing at the site root depends on them.
 
 ## Pace: how fast the film plays
 
