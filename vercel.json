@@ -2,6 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/v3", "destination": "/" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -27,11 +30,11 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
     },
     {
-      "source": "/v2/assets/(film|img)/(.*)",
+      "source": "/assets/film/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=86400" }]
     },
     {
-      "source": "/v2/assets/(js|css)/(.*)",
+      "source": "/(v1|v2)/assets/(js|css)/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
     },
     {

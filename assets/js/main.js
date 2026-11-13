@@ -1,7 +1,12 @@
 /**
- * Page conductor: smooth scroll → film position T → 3D world + DOM reveals.
+ * Page conductor. One scroll position drives two layers:
+ *
+ *   1. the opening film (film.js): storefront, through the door, a walk into the salon,
+ *      then the room bleeds away, and
+ *   2. the 3D hair world (world.js) underneath it, mapped through a film position T.
  */
 import Lenis from 'lenis';
+import { createFilm } from './film.js';
 
 const root = document.documentElement;
 root.classList.add('js');
@@ -15,6 +20,8 @@ const yearEl = document.querySelector('[data-year]');
 if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const ease = (x) => x * x * (3 - 2 * x);
 
 /* ------------------------------------------------------------------ */
 /* Motion control (WCAG 2.2.2 Pause, Stop, Hide)                       */
@@ -41,18 +48,26 @@ motionBtn?.addEventListener('click', () => {
 applyMotion();
 
 /* ------------------------------------------------------------------ */
-/* Smooth scroll                                                       */
+/* Scrolling: slow and silky                                           */
 /* ------------------------------------------------------------------ */
-// Smooth scrolling for mouse wheels and trackpads only. Touch screens keep the
-// browser's own scrolling: it handles momentum, axis locking (the stylist
-// carousel), pinch-zoom and the address bar far better than any script can.
+// Mouse wheels and trackpads: each notch travels a little over half as far as the
+// browser default and glides to rest, so the film plays at an unhurried pace.
+// Touch screens keep the browser's own scrolling (momentum, pinch-zoom and the
+// address bar are handled far better natively); there the film is paced by longer
+// sections and a softer follow instead. See WHEEL_PACE / FOLLOW below and the
+// section heights in style.css.
+const WHEEL_PACE = 0.58;  // 1 = browser default distance per wheel notch
+const WHEEL_GLIDE = 0.072; // lower = longer, softer glide to rest
 const touchDevice = matchMedia('(pointer: coarse)').matches;
 // Touch screens get a plain, naturally scrolling page with no pinned sections
 // (see the "(pointer: coarse)" block in style.css): iOS Safari jitters them.
 const flowMode = touchDevice;
 const lenis = !reducedMotion && !capture && !touchDevice
-  ? new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true })
+  ? new Lenis({ lerp: WHEEL_GLIDE, wheelMultiplier: WHEEL_PACE, smoothWheel: true })
   : null;
+// How quickly the pictures catch up with the scroll position (per second).
+// Softer on touch, so a fast flick plays out as a smooth move, not a jump.
+const FOLLOW = touchDevice ? { film: 5.5, world: 4 } : { film: 11, world: 7 };
 
 const scrollY = () => (lenis ? lenis.scroll : window.scrollY);
 
@@ -64,8 +79,11 @@ function focusTarget(el) {
 function scrollToTarget(hash) {
   const el = document.getElementById(decodeURIComponent(hash.slice(1)));
   if (!el) return;
-  if (lenis) lenis.scrollTo(el, { duration: 1.8 });
-  else el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+  if (lenis) {
+    // long jumps take a little longer, so the film never whips past
+    const dist = Math.abs(el.getBoundingClientRect().top);
+    lenis.scrollTo(el, { duration: Math.min(3.4, Math.max(1.4, dist / 4200)) });
+  } else el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
   // move keyboard / screen-reader focus to where the user asked to go
   focusTarget(el);
 }
@@ -126,10 +144,10 @@ const chapters = [...document.querySelectorAll('.chapter')].map((el) => ({
   side: el.classList.contains('chapter--left') || el.classList.contains('chapter--right'),
 }));
 const galleryData = chapters.find((c) => c.el.classList.contains('chapter--gallery'));
-const hero = document.querySelector('.hero');
 const navLinks = [...document.querySelectorAll('[data-link]')];
 const railItems = [...document.querySelectorAll('[data-rail]')];
 const railTrack = document.querySelector('.rail__track');
+const progressBar = document.querySelector('.progress i');
 
 /* Salon gallery: a pinned section whose photos slide sideways with scroll */
 const galleryChapter = document.querySelector('.chapter--gallery');
@@ -150,6 +168,7 @@ function measureGallery() {
   // travel until the last photo sits in the middle of the screen
   galleryTravel = Math.max(0, lastCenter - galleryStageW / 2);
   // roughly one pixel of scroll per pixel of sideways travel, plus a short dwell
+  // (its calmer pace comes from the slower wheel, see WHEEL_PACE)
   const ratio = matchMedia('(max-width: 720px)').matches ? 1.7 : 1;
   galleryChapter.style.height = `${Math.round(galleryTravel * ratio + vh * 1.5)}px`;
   lastGX = null;
@@ -192,18 +211,108 @@ let lastVeilP = -1;
 function absTop(el) {
   return el.getBoundingClientRect().top + window.scrollY;
 }
+// Position in the document from the layout alone (ignores reveal transforms)
+function docTop(el) { let y = 0; for (let e = el; e; e = e.offsetParent) y += e.offsetTop; return y; }
+
+/* ------------------------------------------------------------------ */
+/* The opening film                                                    */
+/* ------------------------------------------------------------------ */
+const filmEl = document.querySelector('.film');
+const filmCanvas = filmEl?.querySelector('canvas');
+const filmShade = filmEl?.querySelector('.film__shade');
+const reel = document.querySelector('.reel');
+const heroBeat = document.querySelector('.beat--hero');
+const roomCopy = document.querySelector('[data-beat="room"] .beat__copy');
+const homeBeat = document.querySelector('[data-beat="home"]');
+
+let film = null;
+let filmFirstFrame = () => {};
+const filmFirst = new Promise((r) => { filmFirstFrame = r; });
+if (filmCanvas) {
+  try { film = createFilm(filmCanvas, { onFirstFrame: filmFirstFrame }); } catch { root.classList.add('no-film'); filmFirstFrame(); }
+} else filmFirstFrame();
+
+// Scroll positions (px) of the film's beats. Measured from the layout.
+let R = null;
+function measureReel() {
+  if (!reel || !roomCopy || !homeBeat) { R = null; return; }
+  const home = docTop(homeBeat);                       // T = 0: the hair world's first scene
+  const room = docTop(roomCopy) - vh * 0.95;           // the room copy is about to enter
+  R = {
+    y0: docTop(reel),
+    yA: room - vh * 0.08,        // the clip ends
+    yB: room + vh * 0.08,        // the 3D room has fully taken over
+    yM0: home - vh * 0.85,       // the lights start to go down
+    yG0: home - vh * 0.35,       // the room starts to bleed away
+    yG1: home + vh * 0.6,        // gone: the hair film has the screen
+  };
+}
+
+// What the film should show at scroll position y
+function filmTargets(y) {
+  return {
+    c: clamp01((y - R.y0) / (R.yA - R.y0)),                 // clip progress
+    m: ease(clamp01((y - R.yA) / (R.yB - R.yA))),           // clip → room cross-fade
+    r: clamp01((y - R.yB) / (R.yG1 - R.yB)),                // walk into the room
+    d: ease(clamp01((y - R.yM0) / (R.yG0 + vh * 0.2 - R.yM0))), // lights down
+    g: clamp01((y - R.yG0) / (R.yG1 - R.yG0)),              // the bleed
+  };
+}
+const shown = { c: 0, m: 0, r: 0, d: 0, g: 0 };
+let filmSnapped = false;
+let filmHidden = false;
+let filmKept = true;
+let lastShade = -1;
+
+function driveFilm(y, dt, snap = false) {
+  if (!R || !filmEl) return 1;
+  const t = filmTargets(y);
+  // follow the scroll with a little easing so frame steps blend smoothly
+  const k = snap || !filmSnapped || capture || reducedMotion ? 1 : 1 - Math.exp(-dt * FOLLOW.film);
+  filmSnapped = true;
+  for (const key in shown) shown[key] += (t[key] - shown[key]) * k;
+  const g = shown.g < 0.0005 ? 0 : shown.g > 0.9995 ? 1 : shown.g;
+
+  // once the room has bled away completely, the film layer is taken off screen
+  const gone = g >= 1;
+  if (gone !== filmHidden) { filmHidden = gone; filmEl.style.visibility = gone ? 'hidden' : ''; }
+
+  // the clip's frames are only held in memory while the film is within reach
+  if (film) {
+    if (filmKept && y > R.yG1 + vh * 3) { filmKept = false; film.keep(false); }
+    else if (!filmKept && y < R.yG1 + vh * 1.5) { filmKept = true; film.keep(true); }
+  }
+
+  if (!gone) {
+    const shade = Math.round((1 - ease(g)) * 100) / 100;
+    if (shade !== lastShade) {
+      lastShade = shade;
+      if (filmShade) filmShade.style.opacity = String(shade);
+      // without WebGL2 there is no bleed: the whole layer simply fades
+      if (!film || film.mode !== 'gl') filmEl.style.opacity = String(shade);
+    }
+    if (film && !zoomed) {
+      film.resize(Math.min(window.devicePixelRatio || 1, 2));
+      film.set({ clip: shown.c, mix: shown.m, room: shown.r, mood: shown.d, gone: g });
+      film.render();
+      if (film.ready && !root.classList.contains('film-ready')) root.classList.add('film-ready');
+    }
+  }
+  return g;
+}
 
 function measure() {
   vh = viewH();
   measureGallery();
   maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
-  anchors = scenes.map((el) => Math.min(absTop(el), maxScroll));
+  anchors = scenes.map((el) => Math.min(docTop(el), maxScroll));
   for (const c of chapters) {
     c.top = absTop(c.el);
     c.height = c.el.offsetHeight;
     c.lastP = -1;
   }
   pageRanges = pageSections.map((el) => { const top = absTop(el); return { top, bottom: top + el.offsetHeight }; });
+  measureReel();
 }
 
 function filmPosition(y) {
@@ -219,17 +328,18 @@ function filmPosition(y) {
   return n - 1 + (maxScroll > last ? Math.min(1, (y - last) / (maxScroll - last)) : 0);
 }
 
-const clamp01 = (x) => Math.min(1, Math.max(0, x));
-const ease = (x) => x * x * (3 - 2 * x);
-
 let lastHero = -1;
 let lastActive = -1;
-function updateDom(y, T, time, velocity) {
+let lastProgress = -1;
+function updateDom(y, T) {
   // only touch styles when a value actually changes (keeps style recalcs cheap)
   const heroP = Math.round(clamp01(y / (vh * 0.9)) * 1000) / 1000;
-  if (heroP !== lastHero) { hero.style.setProperty('--hero', String(heroP)); lastHero = heroP; }
+  if (heroP !== lastHero && heroBeat) { heroBeat.style.setProperty('--hero', String(heroP)); lastHero = heroP; }
   root.classList.toggle('is-scrolled', y > 30);
   root.classList.toggle('show-rail', T > 0.75 && T < 3.9); // hidden once the photo gallery starts
+
+  const progress = Math.round(clamp01(y / maxScroll) * 2000) / 2000;
+  if (progress !== lastProgress && progressBar) { progressBar.style.transform = `scaleX(${progress})`; lastProgress = progress; }
 
   for (const c of chapters) {
     if (flowMode) break; // touch screens reveal text on entry instead (see below)
@@ -290,20 +400,34 @@ function updateDom(y, T, time, velocity) {
   updateGallery(y);
 }
 
-/* Plain in-view reveals for normal flowing sections */
-const io = new IntersectionObserver((entries) => {
-  for (const en of entries) {
-    if (en.isIntersecting) {
-      en.target.classList.add('is-in');
-      io.unobserve(en.target);
-    }
-  }
-}, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+/* ------------------------------------------------------------------ */
+/* Reveals                                                             */
+/* ------------------------------------------------------------------ */
+// The film's copy fades in and out as each block passes through the screen
+const beatCopies = [...document.querySelectorAll('[data-beat] .beat__copy')];
+// Normal flowing sections fade in once
 const revealSelector = flowMode ? '[data-inview], [data-reveal]' : '[data-inview]';
-document.querySelectorAll(revealSelector).forEach((el) => io.observe(el));
+const inviewEls = [...document.querySelectorAll(revealSelector)];
+if (capture || !('IntersectionObserver' in window)) {
+  [...beatCopies, ...inviewEls].forEach((el) => el.classList.add('is-in'));
+} else {
+  const beatIO = new IntersectionObserver((entries) => {
+    for (const en of entries) en.target.classList.toggle('is-in', en.isIntersecting);
+  }, { rootMargin: '-8% 0px -12% 0px' });
+  beatCopies.forEach((el) => beatIO.observe(el));
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (en.isIntersecting) {
+        en.target.classList.add('is-in');
+        io.unobserve(en.target);
+      }
+    }
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  inviewEls.forEach((el) => io.observe(el));
+}
 // anything that receives keyboard focus is revealed immediately
 document.addEventListener('focusin', (e) => {
-  const el = e.target.closest?.(revealSelector);
+  const el = e.target.closest?.(`${revealSelector}, .beat__copy`);
   if (el) el.classList.add('is-in');
 });
 
@@ -333,46 +457,69 @@ let T = 0;
 let prevT = 0;
 let last = performance.now();
 let filmTime = 0;
+let bleed = 0;       // 0 while the opening film covers the screen, 1 once it has gone
+let worldDrawn = false;
 
+let curtainUp = false;
 function reveal() {
+  curtainUp = true;
   if (!root.classList.contains('is-loaded')) {
     root.classList.add('is-loaded');
     measure();
   }
 }
 
-async function boot() {
-  measure();
-
-  // Content never waits on the 3D: lift the curtain as soon as fonts are in
-  const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
-  if (!capture) {
-    Promise.race([fontsReady, wait(1200)]).then(reveal);
-    requestAnimationFrame(frame);
-  }
-
+let worldRequested = false;
+async function loadWorld() {
+  if (worldRequested) return;
+  worldRequested = true;
   try {
     const { createWorld } = await import('./world.js');
-    world = await createWorld(document.getElementById('gl'), { capture, reducedMotion });
-    await Promise.race([world.ready, wait(8000)]);
+    const w = await createWorld(document.getElementById('gl'), { capture, reducedMotion });
+    await Promise.race([w.ready, wait(8000)]);
     measure();
-    // compile shaders on a first frame before fading the canvas in
-    T = filmPosition(scrollY());
-    world.update(T, filmTime);
-    world.render();
+    // compile shaders on a first frame before the canvas is ever seen
+    T = prevT = filmPosition(scrollY());
+    w.update(T, filmTime, { intro: bleed });
+    w.render();
+    world = w;
     root.classList.add('gl-ready');
   } catch (err) {
     console.warn('3D disabled:', err);
     world = null;
     root.classList.add('no-webgl');
   }
+}
+
+async function boot() {
+  measure();
+  bleed = driveFilm(scrollY(), 0, true);
+  const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
   if (capture) {
+    await loadWorld();
     await fontsReady;
+    // every film frame in place, so captures are deterministic
+    const t0 = performance.now();
+    while (film && film.loaded() < film.frames && performance.now() - t0 < 30000) await wait(100);
     reveal();
-    root.classList.add('gl-ready');
     exposeCapture();
+    return;
   }
+
+  // Content never waits on the 3D: the curtain lifts as soon as the fonts and the
+  // film's first frame are in (or straight away with the fonts when the page
+  // opens below the film, e.g. on a reload or a #link).
+  const below = bleed >= 1;
+  const lifted = Promise.race([Promise.all([fontsReady, below ? null : filmFirst]), wait(1800)]).then(reveal);
+  requestAnimationFrame(frame);
+  // The hair world always starts loading after the curtain is up, never before.
+  // It isn't on screen until the film bleeds away several screens down, so it
+  // waits for the opening to settle; if the visitor gets near it sooner, frame()
+  // starts the load at once.
+  await lifted;
+  if (!below) await wait(1400);
+  loadWorld();
 }
 
 // While pinch-zoomed, hold the 3D still: it saves the phone's memory and GPU
@@ -383,7 +530,7 @@ if (window.visualViewport) {
     const z = visualViewport.scale > 1.01;
     if (z !== zoomed) {
       zoomed = z;
-      root.classList.toggle('is-zoomed', z); // CSS takes the canvas off screen
+      root.classList.toggle('is-zoomed', z); // CSS takes the 3D canvas off screen
     }
   };
   visualViewport.addEventListener('resize', onZoom);
@@ -397,17 +544,23 @@ function frame(now) {
   if (!paused) filmTime += dt;
 
   const y = scrollY();
+  bleed = driveFilm(y, dt);
+  if (!worldRequested && curtainUp && R && y > R.yA) loadWorld(); // the clip is over: the hair is up next
+
   const target = filmPosition(y);
   // Lenis already smooths the scroll; a light extra ease keeps the 3D silky without lagging the page
-  T = reducedMotion ? target : T + (target - T) * (1 - Math.exp(-dt * 9));
+  T = reducedMotion ? target : T + (target - T) * (1 - Math.exp(-dt * FOLLOW.world));
   const velocity = (T - prevT) / dt;
   prevT = T;
 
-  updateDom(y, T, now / 1000, velocity);
-  if (world && !zoomed) {
-    world.update(T, filmTime, { velocity: paused ? 0 : velocity, dt });
+  updateDom(y, T);
+  // While the opening film covers the whole screen the hair world is not drawn at all.
+  const covered = bleed <= 0 && worldDrawn;
+  if (world && !zoomed && !covered) {
+    world.update(T, filmTime, { velocity: paused ? 0 : velocity, dt, intro: bleed });
     world.render();
-    if (!paused) world.reportFrame(dt * 1000);
+    worldDrawn = true;
+    if (!paused && bleed > 0) world.reportFrame(dt * 1000);
   }
   requestAnimationFrame(frame);
 }
@@ -424,32 +577,35 @@ window.addEventListener('resize', () => {
   lastH = h;
   measure();
   world?.resize();
+  worldDrawn = false;
 });
 window.addEventListener('load', measure);
+document.fonts?.ready.then(measure);
 
 window.addEventListener('pointermove', (e) => {
   if (!world || e.pointerType === 'touch' || paused) return;
   world.setPointer((e.clientX / viewW()) * 2 - 1, -((e.clientY / viewH()) * 2 - 1));
 }, { passive: true });
 
-/* Deterministic hook used to render the preview video frame by frame */
+/* Deterministic hook used to render previews frame by frame */
 function exposeCapture() {
   let cPrevT = null;
-  document.querySelectorAll(revealSelector).forEach((el) => el.classList.add('is-in'));
   window.__HH = {
     maxScroll: () => maxScroll,
     anchors: () => anchors.slice(),
+    reel: () => ({ ...R }),
     frame(y, time, fps = 30) {
       window.scrollTo({ top: y, behavior: 'instant' });
+      const g = driveFilm(y, 1 / fps, true);
       const t = filmPosition(y);
       const velocity = cPrevT === null ? 0 : (t - cPrevT) * fps;
       cPrevT = t;
-      updateDom(y, t, time, velocity);
+      updateDom(y, t);
       if (world) {
-        world.update(t, time, { velocity, dt: 1 / fps });
+        world.update(t, time, { velocity, dt: 1 / fps, intro: g });
         world.render();
       }
-      return t;
+      return { t, g };
     },
   };
   window.__HH_READY = true;

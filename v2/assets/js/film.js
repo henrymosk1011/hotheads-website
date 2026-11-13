@@ -18,9 +18,9 @@ const DOLLY = 2.3;
 
 const SETS = {
   // landscape frames cover the full 1920x1080 clip
-  d: { dir: '/v2/assets/film/d/', w: 1920, h: 1080 },
+  d: { dir: '/assets/film/d/', w: 1920, h: 1080 },
   // portrait frames are the centre 608x1080 of the clip
-  m: { dir: '/v2/assets/film/m/', w: 608, h: 1080 },
+  m: { dir: '/assets/film/m/', w: 608, h: 1080 },
 };
 
 const GRADE = `
@@ -148,7 +148,7 @@ export function createFilm(canvas, { onFirstFrame } = {}) {
     };
     for (let k = 0; k < 6; k++) worker();
   }
-  bitmap('/v2/assets/img/room.webp').then((b) => {
+  bitmap('/assets/img/film/room.webp').then((b) => {
     photo = b;
     if (gl) {
       gl.bindTexture(gl.TEXTURE_2D, texPhoto);

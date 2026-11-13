@@ -1,45 +1,54 @@
 # Hotheads Salon: 3D scroll-film concept
 
-A concept redesign of [hotheadspasadena.com](https://www.hotheadspasadena.com/) built around a
-real-time 3D "film" that plays as you scroll. The live Webflow site is untouched; this is a
+A concept redesign of [hotheadspasadena.com](https://www.hotheadspasadena.com/) built as one
+continuous film that plays as you scroll. The live Webflow site is untouched; this is a
 standalone static site you can preview, tweak and launch whenever you're ready.
 
 ![Hero](docs/hero.jpg)
 
-| The cut | The color | The halo |
+| The room bleeds away | The cut | The color | The halo |
+| --- | --- | --- | --- |
+| ![The salon dissolving into the hair film](docs/bleed.jpg) | ![Shears snipping the lock](docs/cut.jpg) | ![Balayage dye on the lock](docs/color.jpg) | ![Halo around the booking call-to-action](docs/halo.jpg) |
+
+## Versions
+
+| Address | Version | What it is |
 | --- | --- | --- |
-| ![Shears snipping the lock](docs/cut.jpg) | ![Balayage dye on the lock](docs/color.jpg) | ![Halo around the booking call-to-action](docs/halo.jpg) |
+| `/` and `/v3` | **V3** (current) | V1 and V2 joined into one film, at a slower pace |
+| [`/v2`](v2/) | V2 | The storefront film with an editorial page under it |
+| [`/v1`](v1/) | V1 | The hair film on its own |
 
-## Version 2 (`/v2/`)
+`/v3` is the site root under a second address (a rewrite in `vercel.json`, so it exists on
+Vercel but not on a plain local file server). V1 and V2 are kept for comparison, each
+self-contained and marked `noindex`. They share the fonts, photos, film frames and vendored
+libraries in `/assets`. Delete the `v1/` and `v2/` folders whenever you no longer need them;
+nothing at the site root depends on them.
 
-A second concept lives in [`v2/`](v2/) and is served at `/v2`. It's a scroll film with editorial type:
+## V3: the film, in one take
+
+Version 3 joins the two earlier concepts into a single piece.
+
+**Act one: the arrival** (`assets/js/film.js`)
 
 1. **The entry clip:** an 8-second AI video (Google Veo, made from a storefront still and the
-   salon's interior photo), cut into 94 frames per layout (`v2/assets/film/d` landscape,
-   `v2/assets/film/m` portrait). Scrolling scrubs through it: storefront, door, inside.
+   salon's interior photo), cut into 94 frames per layout (`assets/film/d` landscape,
+   `assets/film/m` portrait). Scrolling scrubs through it: storefront, door, inside.
 2. **The walk-in:** from the clip's last frame, the camera keeps moving into the real salon. This is
-   the interior photo (`v2/assets/img/room.webp`) projected onto a 3D box room in WebGL, so nothing
+   the interior photo (`assets/img/film/room.webp`) projected onto a 3D box room in WebGL, so nothing
    in it is invented. The clip's last frame is an exact crop of that photo, so the hand-off is seamless.
-3. **The page:** the film shrinks into a card, then services (a swipeable card deck), stylists,
-   salon photos, booking and a giant wordmark footer slide up over it.
+3. **The bleed:** the lights go down to violet, then the room dissolves like dye in water. The
+   opening starts on the purple-haired muse on the back wall and spreads with a glowing edge,
+   and the hair film is already running underneath it.
 
-Copy, prices and stylists are plain HTML in `v2/index.html`. The film code is in
-`v2/assets/js/film.js`, and the scroll timing is in `v2/assets/js/v2.js` (`measure()`).
+**Act two: the hair film** (`assets/js/world.js`)
 
-**Before launching V2:** the storefront in the clip comes from a Google Street View screenshot,
-which is fine for a concept but not for a live site. Re-shoot the storefront (a real photo or
-phone video), regenerate the clip, and re-cut the frames; put them in a new folder name so cached
-frames don't linger. Then move V2 to the site root and remove its `noindex` tag.
+The star is a lock of hair: about 2,400 individually shaded strands rendered on the GPU, inspired
+by that same muse. It pours in from the corner as the room bleeds away, then every chapter does
+something to it:
 
-## The film
-
-The star of the site is a lock of hair: about 2,800 individually shaded strands rendered on the
-GPU. It's inspired by the purple-haired muse painted on the salon's wall. Every chapter of the page
-does something to it:
-
-| Scroll | Chapter | What happens in 3D |
+| Film position | Chapter | What happens in 3D |
 | --- | --- | --- |
-| 0 | **Hero** | The purple lock flows across the screen like silk in slow motion |
+| 0 | **Welcome** | The purple lock grows out across the screen and flows like silk in slow motion |
 | 1 | **01 · The Cut** | Rose-gold shears fly in, open, and *snip*. The cut length drops away and leaves a blunt bob |
 | 2 | **02 · The Color** | Dye drops fall into the hair and a balayage paints from the tips up: violet roots, magenta mids, ember/gold ends |
 | 3 | **03 · The Finish** | The lock curls into volume while heat sparks rise off it |
@@ -48,8 +57,34 @@ does something to it:
 | 7 | **Book** | The whole lock wraps into a glowing halo around "Your chair is waiting" |
 | 8 | Visit | Address, hours, contact |
 
-Everything is driven by one number, the film position **T** (scroll position mapped through the
-page's sections). Scrolling back rewinds the film: the hair un-cuts and the dye un-paints.
+Both acts are driven by scroll position alone, so scrolling back rewinds everything: the hair
+un-cuts, the dye un-paints, the room re-forms and you back out of the door.
+
+The two layers are separate canvases. While the opening film covers the screen the hair world is
+not drawn at all, and it only starts loading once the opening has settled, so the first paint
+never waits on three.js. Far down the page the clip's frames are released from memory and come
+back from the browser cache on the way up.
+
+### Before launching
+
+The storefront in the clip comes from a Google Street View screenshot, which is fine for a concept
+but not for a live site. Re-shoot the storefront (a real photo or phone video), regenerate the
+clip, and re-cut the frames into a new folder name (so cached frames don't linger), then point
+`SETS` in `assets/js/film.js` at it and replace `assets/img/film/poster-*.webp`.
+
+## Pace: how fast the film plays
+
+The whole site is tuned to play slowly. Three things set the pace:
+
+| Where | What | Slower = |
+| --- | --- | --- |
+| `assets/js/main.js` | `WHEEL_PACE` (0.58): how far one notch of a mouse wheel or trackpad travels, as a fraction of the browser default. `WHEEL_GLIDE` is how softly it comes to rest | lower |
+| `assets/js/main.js` | `FOLLOW`: how quickly the pictures catch up with the scroll position (softer on touch, so a fast flick plays out as a smooth move) | lower |
+| `assets/css/style.css` | Section heights: `.beat*` (the opening film) and `.chapter` (the hair film). The touch-screen values are in the `(pointer: coarse)` block | taller |
+
+Touch screens deliberately keep the browser's own scrolling. Scripted touch scrolling was tried
+earlier and caused jumps on iOS, so on phones the film is slowed by distance (taller sections)
+and the softer follow, not by fighting the finger.
 
 ## Run it locally
 
@@ -96,6 +131,7 @@ third-party CDN calls at runtime.
 All copy, prices, stylists and contact details are plain HTML in `index.html`. They were carried
 over from the current site:
 
+- **Opening film copy:** the `.beat` blocks inside `.reel` (headline, "Come on in", "The floor", "Welcome")
 - **Prices:** the chapter "chips" and the `#menu` section
 - **Stylists:** the `#stylists` list (photo, specialty, call/text links)
 - **Address / hours / email:** the `#visit` footer and the JSON-LD block in `<head>`
@@ -105,7 +141,13 @@ gallery is the `.shots` list in the `#salon` section of `index.html`.
 
 ## Tuning the film
 
-`assets/js/world.js` holds a keyframe list (`KEYS`). Each key sets values at a film position
+**The opening film.** `measureReel()` in `assets/js/main.js` places its moments relative to the
+copy blocks: where the clip ends, where the lights go down and where the bleed starts and
+finishes. In `assets/js/film.js`, `DOLLY` is how far the camera walks into the room, `MX`/`MY`
+is the point in the photo the bleed opens from, and the look of the bleed (edge, glow colours,
+the violet "lights down" grade) is the short block at the end of `ROOM_FS`.
+
+**The hair film.** `assets/js/world.js` holds a keyframe list (`KEYS`). Each key sets values at a film position
 `t`: camera position and target, where the hair sits, and how wavy, curly, spread out or bright it
 is. Values in between are interpolated with a monotone cubic, so motion is smooth and never
 overshoots. The one-off moments (the snip timing, dye drops, gallery spin) are short, commented
@@ -122,16 +164,18 @@ Handy knobs:
 ```
 index.html            semantic page; every word is real, crawlable HTML
 assets/css/style.css  layout, type, scroll-linked reveals
-assets/js/main.js     smooth scroll (Lenis) → film position T → DOM + 3D
-assets/js/world.js    renderer, post-processing, timeline, choreography
+assets/js/main.js     smooth scroll (Lenis) → both films + DOM
+assets/js/film.js     opening film: clip frames, 3D walk-in, the bleed (plain WebGL2, no library)
+assets/js/world.js    hair world: renderer, post-processing, timeline, choreography
 assets/js/hair.js     GPU hair: ribbons + Kajiya-Kay sheen, cut / dye / curl / halo
 assets/js/scissors.js procedural rose-gold shears (no model files)
 assets/js/particles.js light dust + heat sparks
 ```
 
 - **Rendering:** three.js r187 with MSAA, an HDR pipeline, bloom, a film-grain/vignette pass and neutral tone mapping
-- **Performance:** fewer strands and particles on phones; quality steps down automatically if
-  the frame rate drops; DPR capped at 1.75
+- **Performance:** the hair world loads after the opening film and is not drawn while that
+  film covers it; fewer strands and particles on phones; quality steps down automatically if
+  the frame rate drops; resolution capped per screen size
 - **Accessibility:** see below
 - **SEO:** see below
 
@@ -141,10 +185,12 @@ The site targets WCAG 2.2 Level AA, the standard used for ADA web compliance.
 
 - **Automated:** axe-core reports zero violations on desktop (1440×900) and phone (390×844),
   both at load and with every scroll-driven section revealed.
-- **Contrast over the 3D:** axe can't measure text over a live canvas, so contrast was
-  measured from rendered pixels across the whole film. For each text run, the brightest
-  background behind its glyphs was compared against the text colour. Every run meets 4.5:1
-  (3:1 for large text) on desktop and phone. Text sits on dark scrims that fade in with it.
+- **Contrast over the films:** axe can't measure text over a live canvas, so contrast was
+  measured from rendered pixels. For each text run, the brightest background behind it was
+  compared against the text colour. Every run meets 4.5:1 (3:1 for large text). The opening
+  film, bleed and welcome were measured at 2000×1100, 1440×900 and 390×844 (0 failures;
+  body text never below 5.5:1); the hair chapters were measured the same way when they were
+  built. Text sits on dark, feathered scrims that fade in with it.
 - **Motion (2.2.2):** a Pause/Play button in the nav freezes all ambient motion: hair, particles
   and CSS loops. It starts paused for visitors with `prefers-reduced-motion`, which also
   turns off smooth-scroll inertia. Scroll-driven changes still follow the user.
@@ -160,7 +206,8 @@ The site targets WCAG 2.2 Level AA, the standard used for ADA web compliance.
   - Every section is a labelled landmark under a single `h1`.
   - Call/Text buttons name the stylist and number.
   - New-tab links say so.
-- **Fallbacks:** without WebGL or JavaScript the page still reads top to bottom.
+- **Fallbacks:** without WebGL or JavaScript the page still reads top to bottom (the opening
+  film becomes a still behind the headline, and its copy closes up into stacked sections).
 
 Automated checks catch most, but not all, accessibility problems. Before launch, do a
 quick manual pass with VoiceOver (iOS/macOS) and NVDA (Windows).
@@ -175,8 +222,9 @@ quick manual pass with VoiceOver (iOS/macOS) and NVDA (Windows).
   - `employee` entries for each stylist
   - `WebSite` and `WebPage`
 - `robots.txt`, an XML sitemap with image entries, a web manifest, favicons and a branded 404
-- Performance: content never waits on the 3D (it fades in when ready), fonts are preloaded,
-  modules are preloaded, images are lazy-loaded with fixed dimensions (no layout shift), and
+- Performance: content never waits on the 3D (three.js loads after the opening has settled),
+  fonts and the first film frame are preloaded, the film's frames load coarse to fine so it
+  is scrubbable early, images are lazy-loaded with fixed dimensions (no layout shift), and
   vendored assets get long-lived cache headers
 
 ## Credits
